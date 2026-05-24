@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<!-- Always check for a fresh copy on load — so deploys reach saved home-screen
+     icons immediately instead of waiting for the GitHub Pages ~10 min HTML cache. -->
+<meta http-equiv="cache-control" content="no-cache">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="0">
 <meta name="theme-color" content="#cd5e69">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -771,6 +776,14 @@ function indexCatalog(){
   state.byId=new Map(); state.bySet=new Map();
   for(const c of state.catalog){
     c.sealed=looksSealed(c.n);
+    // Cache lowercased search fields so searchCatalog doesn't re-toLowerCase
+    // and re-split 60k entries on every keystroke — this is the dominant cost
+    // of typing in the Search tab on mobile. Underscored fields are in-memory
+    // only; they're added AFTER the catalog is written to IndexedDB.
+    c._nameLow=(c.n||"").toLowerCase();
+    c._setLow=(c.s||"").toLowerCase();
+    c._hay=c._nameLow+" "+c._setLow;
+    c._nameWords=c._nameLow.split(/\s+/);
     state.byId.set(String(c.i),c);
     let g=state.bySet.get(c.sid);
     if(!g){ g={name:c.s||("Set "+c.sid),cat:c.cat||CAT,cards:[],sealed:[],groups:[]}; state.bySet.set(c.sid,g); }
@@ -1080,15 +1093,15 @@ function newestSets(n){
 /* relevance score for a matched card — higher = better "Best match".
    Rewards exact/whole-word hits in the card name so that searching
    "Eevee V" surfaces "Eevee V" / "Eevee VMAX" above every plain "Eevee". */
-function matchScore(name,setn,words,full){
+function matchScore(name,setn,words,full,nameWords){
   let s=0;
   if(name===full) s+=1000;                                  // exact name
   else if(name.indexOf(full)===0) s+=480;                   // name starts with query
   else if(full.indexOf(" ")>-1&&name.indexOf(full)>-1) s+=240; // full phrase inside name
-  const nameWords=name.split(/\s+/);
+  const nw=nameWords||name.split(/\s+/);
   for(const w of words){
-    if(nameWords.indexOf(w)>-1) s+=120;                     // query word IS a name word
-    else if(nameWords.some(nw=>nw.indexOf(w)===0)) s+=70;   // a name word starts with it
+    if(nw.indexOf(w)>-1) s+=120;                            // query word IS a name word
+    else if(nw.some(x=>x.indexOf(w)===0)) s+=70;            // a name word starts with it
     else if(name.indexOf(w)>-1) s+=22;                      // loose substring in name
     else if(setn.indexOf(w)>-1) s+=8;                       // only in the set name
   }
@@ -1100,12 +1113,12 @@ function searchCatalog(term){
   const words=t.split(/\s+/).filter(Boolean);
   const scored=[];
   for(const c of state.catalog){
-    const name=(c.n||"").toLowerCase();
-    const setn=(c.s||"").toLowerCase();
-    // match against the card/product name AND its set name, so searching a
-    // set (e.g. "Evolving Skies") returns every card and sealed product in it
-    const hay=name+" "+setn;
-    if(words.every(w=>hay.indexOf(w)>-1)) scored.push({c,sc:matchScore(name,setn,words,t)});
+    // _hay is cached at index time: lowercased "name + ' ' + set name". Matching
+    // against the combined haystack means searching a set name returns every
+    // card and sealed product in it.
+    const hay=c._hay; if(!hay) continue;
+    if(words.every(w=>hay.indexOf(w)>-1))
+      scored.push({c,sc:matchScore(c._nameLow,c._setLow,words,t,c._nameWords)});
   }
   // rank by relevance — this is the "Best match" order — then cap at 240
   scored.sort((a,b)=>b.sc-a.sc||(a.c.n||"").localeCompare(b.c.n||""));
@@ -2029,7 +2042,9 @@ function bindSearchTab(){
     clearTimeout(bindSearchTab._t);
     // Only re-render the results — the input itself stays put, so the mobile
     // keyboard / autocorrect / cursor are never disrupted mid-typing.
-    bindSearchTab._t=setTimeout(renderSearchResults,180);
+    // 240ms is comfortably above "burst typing" cadence: continuous typing
+    // never triggers a filter+render pass, only the pause at the end does.
+    bindSearchTab._t=setTimeout(renderSearchResults,240);
   });
 }
 
