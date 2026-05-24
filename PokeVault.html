@@ -2641,7 +2641,7 @@ function renderSettings(){
 function exportData(){
   const payload={app:"PokéVault",version:4,exportedAt:new Date().toISOString(),
     owned:state.owned,wishlist:state.wishlist,tracked:state.tracked,
-    favorites:state.favorites,history:state.history};
+    favorites:state.favorites,wishFolders:state.wishFolders,history:state.history};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
@@ -2665,13 +2665,14 @@ function handleImport(file){
         }
       }
       if(!owned||typeof owned!=="object") throw new Error("bad");
-      if(!confirm("Import this backup? It replaces your current collection, wishlist and tracked sets.")) return;
+      if(!confirm("Import this backup? It replaces your current collection, wishlist, wishlist folders and tracked sets.")) return;
       state.owned=owned;
       state.wishlist=(d.wishlist&&typeof d.wishlist==="object")?d.wishlist:{};
       state.tracked=(d.tracked&&typeof d.tracked==="object")?d.tracked:{};
       state.favorites=(d.favorites&&typeof d.favorites==="object")?d.favorites:{};
+      state.wishFolders=normFolders(d.wishFolders);
       if(Array.isArray(d.history)) state.history=d.history;
-      saveOwned(); saveWish(); saveTracked(); saveFav(); saveHistory(); persistPrices();
+      saveOwned(); saveWish(); saveTracked(); saveFav(); saveWishFolders(); saveHistory(); persistPrices();
       renderSettings(); setView("collection");
       toast("Backup imported");
     }catch(e){ toast("Couldn’t read that file — is it a PokéVault backup?"); }
