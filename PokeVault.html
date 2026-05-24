@@ -1421,7 +1421,7 @@ function renderHome(){
     return;
   }
   const hm=state.home;
-  if(hm.mode==="picker"){ box.innerHTML=renderPicker(); bindPickerFilter(); return; }
+  if(hm.mode==="picker"){ box.innerHTML=renderPicker(); renderPickerResults(); bindPickerFilter(); return; }
   if(hm.mode==="mysets"){ box.innerHTML=renderMySets(); return; }
   if(hm.mode==="detail"){ box.innerHTML=renderSetDetail(); return; }
   box.innerHTML=renderDashboard();
@@ -1495,14 +1495,13 @@ function renderDashboard(){
 
 function renderPicker(){
   const hm=state.home;
-  const f=(hm.pickerFilter||"").trim().toLowerCase();
-  let sets=allSetsSorted();
-  if(f) sets=sets.filter(s=>s.name.toLowerCase().indexOf(f)>-1);
   const so=state.prefs.setSort||"az";
-  if(so==="new") sets.sort((a,b)=>cmpSid(b.sid,a.sid));
-  else if(so==="old") sets.sort((a,b)=>cmpSid(a.sid,b.sid));
   const trackedN=allSetsSorted().filter(s=>isTracked(s.sid)).length;
-  let html=`<button class="back-btn" data-action="back-home">‹ Done</button>
+  // Shell only — the filtered set list lives in #pickerResults below, which is
+  // updated on each keystroke without destroying the input (mobile keyboard /
+  // autocorrect stay intact). The filter input value is read live from the DOM
+  // by renderPickerResults().
+  return `<button class="back-btn" data-action="back-home">‹ Done</button>
     <h2 class="section">Add sets to track</h2>
     <div class="search-bar"><input type="text" id="pickerFilter" placeholder="Filter sets by name…"
       autocomplete="off" value="${esc(hm.pickerFilter||"")}"></div>
@@ -1511,8 +1510,19 @@ function renderPicker(){
       <button class="${so==="new"?"active":""}" data-action="set-sort" data-s="new">Newest first</button>
       <button class="${so==="old"?"active":""}" data-action="set-sort" data-s="old">Oldest first</button>
     </div>
-    <p class="muted" style="font-size:12px;margin-bottom:11px">${trackedN} set${trackedN===1?"":"s"} tracked · tap a set to add or remove it</p>`;
-  html+=sets.map(s=>{
+    <p class="muted" style="font-size:12px;margin-bottom:11px">${trackedN} set${trackedN===1?"":"s"} tracked · tap a set to add or remove it</p>
+    <div id="pickerResults"></div>`;
+}
+function renderPickerResults(){
+  const out=$("#pickerResults"); if(!out) return;
+  const hm=state.home;
+  const f=(hm.pickerFilter||"").trim().toLowerCase();
+  let sets=allSetsSorted();
+  if(f) sets=sets.filter(s=>s.name.toLowerCase().indexOf(f)>-1);
+  const so=state.prefs.setSort||"az";
+  if(so==="new") sets.sort((a,b)=>cmpSid(b.sid,a.sid));
+  else if(so==="old") sets.sort((a,b)=>cmpSid(a.sid,b.sid));
+  let html=sets.map(s=>{
     const t=isTracked(s.sid), st=setStats(s.sid);
     return `<div class="set-row ${t?"tracked":""}" data-action="toggle-track" data-sid="${esc(s.sid)}">
       <div class="si">
@@ -1523,7 +1533,7 @@ function renderPicker(){
     </div>`;
   }).join("");
   if(!sets.length) html+=`<div class="empty"><p>No sets match “${esc(hm.pickerFilter)}”.</p></div>`;
-  return html;
+  out.innerHTML=html;
 }
 function bindRaritySel(){
   const sel=$("#raritySel"); if(!sel) return;
@@ -1534,12 +1544,8 @@ function bindPickerFilter(){
   inp.addEventListener("input",()=>{
     state.home.pickerFilter=inp.value;
     clearTimeout(bindPickerFilter._t);
-    bindPickerFilter._t=setTimeout(()=>{
-      const fc=document.activeElement===inp;
-      const ss=inp.selectionStart, se=inp.selectionEnd;
-      renderHome();
-      if(fc){ const ni=$("#pickerFilter"); if(ni){ ni.focus(); try{ni.setSelectionRange(ss,se);}catch(e){} } }
-    },160);
+    // Only re-render the list — input stays put so mobile typing isn't disrupted.
+    bindPickerFilter._t=setTimeout(renderPickerResults,160);
   });
 }
 
@@ -1845,9 +1851,19 @@ function renderSearch(){
     return;
   }
   const term=state.search.term;
-  let html=`<div class="search-bar"><input type="text" id="searchInput"
+  // Render the search bar ONCE per tab visit, then update only #searchResults
+  // on each keystroke. Re-creating the input on every keystroke breaks mobile
+  // IME / autocorrect / predictive text and makes typing feel jumpy.
+  box.innerHTML=`<div class="search-bar"><input type="text" id="searchInput"
     placeholder="Search any card or product…" autocomplete="off" enterkeyhint="search"
-    value="${esc(term)}"></div>`;
+    value="${esc(term)}"></div><div id="searchResults"></div>`;
+  renderSearchResults();
+  bindSearchTab();
+}
+function renderSearchResults(){
+  const out=$("#searchResults"); if(!out) return;
+  const term=state.search.term;
+  let html="";
   if(term.trim()){
     const res=filteredResults();
     const fc=activeFilterCount();
@@ -1867,8 +1883,7 @@ function renderSearch(){
       Try <b>Bulbasaur</b>, <b>Umbreon VMAX</b>, or <b>booster box</b>.</p>
     </div>`;
   }
-  box.innerHTML=html;
-  bindSearchTab();
+  out.innerHTML=html;
 }
 /* search result filtering & sorting (Filters panel) */
 let _raritiesCache=null;
@@ -2012,12 +2027,9 @@ function bindSearchTab(){
   inp.addEventListener("input",()=>{
     state.search.term=inp.value;
     clearTimeout(bindSearchTab._t);
-    bindSearchTab._t=setTimeout(()=>{
-      const fc=document.activeElement===inp;
-      const ss=inp.selectionStart, se=inp.selectionEnd;
-      renderSearch();
-      if(fc){ const ni=$("#searchInput"); if(ni){ ni.focus(); try{ni.setSelectionRange(ss,se);}catch(e){} } }
-    },180);
+    // Only re-render the results — the input itself stays put, so the mobile
+    // keyboard / autocorrect / cursor are never disrupted mid-typing.
+    bindSearchTab._t=setTimeout(renderSearchResults,180);
   });
 }
 
