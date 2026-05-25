@@ -8,6 +8,14 @@ Living backlog. Tag legend: **[P1]** = ship this month, **[P2]** = ship when tim
 
 - [ ] **[P1] Test harness committed to the repo.** jsdom + fake-indexeddb + Node's `webcrypto`, mocking the three external services (TCGTracking, Supabase, allorigins). ~30-50 assertions covering: `indexCatalog` (grouping by collector number, sealed split, pattern-reverse dedup), `searchCatalog` + `matchScore` ranking, `looksSealed` / `isChaseRarity` / `isHighValueRarity`, sync `encryptBlob`→`decryptBlob` round-trip, JSON export→import round-trip (now including `wishFolders`), `normFolders` defensive behaviour. Why: every edit to a 170KB single-file app is currently unverified. Risk grows with every feature.
 
+## Offline / poor-signal use
+
+Validated as a real need: app was used at a card show with poor signal. Catalog and collection work offline (IndexedDB + localStorage), but images and live prices stall.
+
+- [ ] **[P1] Pre-warm images for owned / wishlist / tracked sets.** A Settings button ("Download images for offline use · ~X MB · wifi recommended") that walks every product image URL in your owned + wishlist + tracked sets and triggers the browser to cache them. Cheap first step — no service worker needed. Means next show, every card you're likely to look at loads instantly.
+- [ ] **[P1] Service worker for app shell + image cache-on-view.** Revisits the earlier "skip PWA" decision: the use case shifted from at-home use to at-card-show use, where offline reliability matters. SW caches the HTML/JS/CSS (instant launch, works fully offline) and stale-while-revalidates card images so anything you've ever viewed loads from cache. Combine with a manifest for "Add to Home Screen" → proper PWA. Bigger change than pre-warm but the real fix.
+- [ ] **[P2] "Last refreshed" indicator on prices.** Cached prices already display from `pv3_prices`; surface the cache age subtly under each price so the user knows when offline data is stale.
+
 ## Data / backend
 
 - [ ] **[P1] Catalog as a pre-built static asset.** GitHub Action on a daily cron hits the TCGTracking `/sets` and `/sets/{id}` endpoints, builds a compressed JSON, commits to `gh-pages` (or a `catalog/` dir). Client downloads it on first run instead of making ~250 API calls. Drops first-device-setup from ~1 min to a few seconds. Biggest single multi-device UX win.
@@ -22,6 +30,7 @@ Living backlog. Tag legend: **[P1]** = ship this month, **[P2]** = ship when tim
 
 ## Frontend / UX
 
+- [ ] **[P1] Mobile tap-target sizing pass (Figma → CSS).** Driven from a redesign in the user's Figma file; many controls (`.vtog` per-printing checks, pagination chevrons, heart/star/⋯ icon buttons, `+`/`–` steppers, header Sort/Filter buttons) are below the iOS 44×44pt / Material 48dp minimums. Validated as a real pain point at a card show. Implementation waits on the design.
 - [ ] **[P1] Haptic feedback on check / toggle actions.** `navigator.vibrate(5)` on `own-toggle`, `wl-toggle`, `track-toggle`, and the per-printing `.vtog` taps. Turns the core checklist workflow from look-then-confirm into kinetic. Single highest-ROI UX change.
 - [ ] **[P1] Image placeholders / skeleton tiles.** Currently tiles paint as empty boxes until images stream in. Add a neutral background + opacity transition on `<img onload>` so tiles fade in instead of popping. Eliminates layout jank during search results render.
 - [ ] **[P1] Android hardware-back closes modals.** Right now (almost certainly) backing out of an open modal exits the app. Standard `history.pushState` + `popstate` pattern on `openModal()` / `closeModal()`. Same approach for the picker / set-detail sub-views.
@@ -53,3 +62,5 @@ Living backlog. Tag legend: **[P1]** = ship this month, **[P2]** = ship when tim
 - [x] **Include wishlist folders in JSON export/import** — commit `62ce869`.
 - [x] **Stop destroying text inputs mid-typing on Search and Picker** — commit `2fe3541`.
 - [x] **Faster search filter (cached lowercased fields) + no-cache meta tags for instant deploys** — commit `0a7137d`.
+- [x] **TODO.md backlog committed** — commit `3806ec8`.
+- [x] **Search by collector number** — index `_nuLow` into the haystack, strip "/x" suffix from query words so "RC29/RC32" matches a card numbered "RC29", and score exact number matches highly. Pending commit.
