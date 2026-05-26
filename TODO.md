@@ -63,4 +63,5 @@ Validated as a real need: app was used at a card show with poor signal. Catalog 
 - [x] **Stop destroying text inputs mid-typing on Search and Picker** — commit `2fe3541`.
 - [x] **Faster search filter (cached lowercased fields) + no-cache meta tags for instant deploys** — commit `0a7137d`.
 - [x] **TODO.md backlog committed** — commit `3806ec8`.
-- [x] **Search by collector number** — index `_nuLow` into the haystack, strip "/x" suffix from query words so "RC29/RC32" matches a card numbered "RC29", and score exact number matches highly. Pending commit.
+- [x] **Search by collector number** — index `_nuLow` into the haystack, strip "/x" suffix from query words so "RC29/RC32" matches a card numbered "RC29", and score exact number matches highly. Commit `27848bb`.
+- [x] **Fix "Iron Bundle" (and any other rarity-bearing card with a sealed-keyword name) being misclassified as sealed** — `looksSealed()` now defers to the API's rarity field as the primary signal; the name regex is a fallback for sealed products with missing rarity, and the "bundle" branch now requires a sealed-context prefix. Pending commit.

@@ -569,7 +569,11 @@ const LS_SETDATES="pv4_setdates";
 const IDB_NAME="pokevault", IDB_STORE="catalog";
 const NEWS_FEED="https://www.pokebeach.com/feed/";
 
-const SEALED_RE=/\b(booster|box|tin|blister|bundle|elite trainer|build\s*&?\s*battle|collection|gift set|display|case|theme deck|battle deck|starter|toolkit|calendar)\b/i;
+// "bundle" alone is split into a second branch so it only matches with a
+// sealed-context prefix (booster|pack|battle|premium|art|sleeved). Bare
+// "bundle" would catch the Pokémon "Iron Bundle" — which we found in the
+// wild in Surging Sparks #055.
+const SEALED_RE=/\b(booster|box|tin|blister|elite trainer|build\s*&?\s*battle|collection|gift set|display|case|theme deck|battle deck|starter|toolkit|calendar)\b|\b(booster|pack|battle|premium|art|sleeved)\s+bundle\b/i;
 
 const state={
   catalog:[], byId:new Map(), bySet:new Map(), catalogMeta:null,
@@ -775,7 +779,13 @@ function looksSealed(name){ return SEALED_RE.test(name||""); }
 function indexCatalog(){
   state.byId=new Map(); state.bySet=new Map();
   for(const c of state.catalog){
-    c.sealed=looksSealed(c.n);
+    // Sealed classification has two guards: the API gives every real card a
+    // rarity (Common/Uncommon/Rare/etc.) and leaves sealed products without
+    // one, so a non-empty rarity overrides the name regex. This is what
+    // un-misclassifies things like "Iron Bundle" (Pokémon, Uncommon) from
+    // being lumped with "Booster Bundle" (sealed). The regex still catches
+    // sealed products with missing rarity data.
+    c.sealed=!c.r && looksSealed(c.n);
     // Cache lowercased search fields so searchCatalog doesn't re-toLowerCase
     // and re-split 60k entries on every keystroke — this is the dominant cost
     // of typing in the Search tab on mobile. Underscored fields are in-memory
