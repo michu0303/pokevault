@@ -16,6 +16,7 @@ export function createApp({ ls = globalThis.localStorage, idb = globalThis.index
     catalog: [], byId: new Map(), bySet: new Map(), priceCache: {},
     building: false, build: { done: 0, total: 0, products: 0, failed: 0, source: "" },
     syncStatus: "", syncError: "", syncedAt: 0,
+    ui: { search: { term: "", sort: "best", type: "all", lang: "all", rarity: [], set: [] }, col: { sort: "val-hi", lang: "all", rarity: [], set: [], shown: 30 }, wl: { sort: "val-hi", lang: "all", rarity: [], set: [] } },
   }, { ls, onDirty: () => schedulePush() });
   const { state } = store;
 
@@ -66,7 +67,7 @@ export function createApp({ ls = globalThis.localStorage, idb = globalThis.index
     const g = state.bySet.get(sid);
     const prices = await fetchSetPricing((g && g.cat) || CAT, sid, fetchImpl);
     state.priceCache[sid] = prices;
-    store.update((s) => applySetPricing(s.flatPrices, prices, g), "flatPrices");
+    store.update((s) => { applySetPricing(s.flatPrices, prices, g); s.pricesAt = Date.now(); }, "flatPrices");
     return prices;
   }
   /** refresh prices for every set that has an owned or wishlisted card */

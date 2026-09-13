@@ -4,7 +4,7 @@
 import { LS, IDB_NAME, IDB_STORE } from "./constants.js";
 import { normFolders } from "./collection.js";
 
-const DEFAULT_PREFS = { binder: true, cols: 4, setSort: "az", colRarity: "", colPerPage: 30, theme: "system" };
+const DEFAULT_PREFS = { binder: true, cols: 4, setSort: "az", colRarity: "", colPerPage: 30, theme: "system", recent: [] };
 
 export function readJSON(ls, k) { try { return JSON.parse(ls.getItem(k)); } catch (e) { return null; } }
 export function writeJSON(ls, k, v) { try { ls.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
@@ -18,6 +18,7 @@ export function normalizePrefs(pf) {
     p.colRarity = typeof pf.colRarity === "string" ? pf.colRarity : "";
     p.colPerPage = [10, 20, 30, 50, 100].includes(pf.colPerPage) ? pf.colPerPage : 30;
     p.theme = ["light", "dark", "system"].includes(pf.theme) ? pf.theme : "system";
+    p.recent = Array.isArray(pf.recent) ? pf.recent.filter((x) => typeof x === "string").slice(0, 8) : [];
   }
   return p;
 }
@@ -35,6 +36,7 @@ export function loadAll(ls = globalThis.localStorage) {
     prefs: normalizePrefs(readJSON(ls, LS.PREFS)),
     sync: (() => { const s = readJSON(ls, LS.SYNC); return s && typeof s === "object" ? { url: s.url || "", key: s.key || "", pass: s.pass || "" } : { url: "", key: "", pass: "" }; })(),
     dirty: ls.getItem(LS.DIRTY) === "1",
+    pricesAt: +(ls.getItem(LS.PRICES_AT) || 0) || 0,
     migrated: false,
   };
   if (!Object.keys(out.owned).length) {
@@ -63,6 +65,7 @@ export const save = {
   setDates: (v, ls = globalThis.localStorage) => writeJSON(ls, LS.SETDATES, v),
   prefs: (v, ls = globalThis.localStorage) => writeJSON(ls, LS.PREFS, v),
   catalogMeta: (v, ls = globalThis.localStorage) => v ? writeJSON(ls, LS.META, v) : (ls.removeItem(LS.META), true),
+  pricesAt: (v, ls = globalThis.localStorage) => { try { ls.setItem(LS.PRICES_AT, String(v)); } catch (e) {} },
   sync: (v, ls = globalThis.localStorage) => v && v.url ? writeJSON(ls, LS.SYNC, v) : (ls.removeItem(LS.SYNC), true),
   dirty: (on, ls = globalThis.localStorage) => { try { on ? ls.setItem(LS.DIRTY, "1") : ls.removeItem(LS.DIRTY); } catch (e) {} },
   /** history is the largest blob; on quota failure keep only totals for older entries */

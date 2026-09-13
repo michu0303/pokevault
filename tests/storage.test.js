@@ -21,7 +21,7 @@ test("loadAll reads the original app's keys unchanged", () => {
   const s = loadAll(ls);
   assert.deepEqual(s.owned, { 5: { Normal: 2 } });
   assert.equal(s.wishFolders[0].name, "A");
-  assert.deepEqual(s.prefs, { binder: true, cols: 3, setSort: "az", colRarity: "", colPerPage: 50, theme: "dark" });
+  assert.deepEqual(s.prefs, { binder: true, cols: 3, setSort: "az", colRarity: "", colPerPage: 50, theme: "dark", recent: [] });
   assert.deepEqual(s.sync, { url: "u", key: "k", pass: "p" }); assert.equal(s.dirty, true);
   assert.equal(normalizePrefs(null).theme, "system");
 });

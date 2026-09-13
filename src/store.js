@@ -13,7 +13,7 @@ export function createStore(initial, { ls = globalThis.localStorage, onDirty } =
     wishFolders: () => { save.wishFolders(state.wishFolders, ls); dirty(); },
     tracked: () => { save.tracked(state.tracked, ls); dirty(); },
     favorites: () => { save.favorites(state.favorites, ls); dirty(); },
-    flatPrices: () => save.prices(prunePrices(state.flatPrices, state.owned, state.wishlist), ls),
+    flatPrices: () => { save.prices(prunePrices(state.flatPrices, state.owned, state.wishlist), ls); if (state.pricesAt) save.pricesAt(state.pricesAt, ls); },
     setDates: () => save.setDates(state.setDates, ls),
     prefs: () => save.prefs(state.prefs, ls),
     history: () => { state.history = save.history(state.history, ls); },

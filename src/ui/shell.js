@@ -53,7 +53,7 @@ export function mountShell(app, screens) {
       if (sheet && sheet.unmount) sheet.unmount();
       sheet = null; sheetKey = cardKey;
       if (route.query.card) sheet = mountCardSheet(sheetEl, ctx, route.query.card);
-    }
+    } else if (sheet && sheet.route) sheet.route(route);
   }
   store.subscribe((s, changed) => {
     if (changed.has("prefs")) applyTheme(s.prefs.theme);

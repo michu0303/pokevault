@@ -6,6 +6,8 @@ import { isChaseRarity, patternOf, shortVariant } from "../../catalog.js";
 import { variantsFor, priceOf, primaryVariant } from "../../pricing.js";
 import { productSeries } from "../../history.js";
 import { CAT_JP } from "../../constants.js";
+import { mountSheet } from "../sheet.js";
+import { toggleCardFolder, addFolder, folderCount } from "../../collection.js";
 
 export function mountCardSheet(host, ctx, pid) {
   const { state, store, app } = ctx;
@@ -44,7 +46,7 @@ export function mountCardSheet(host, ctx, pid) {
     close: () => ctx.back(),
     zoom: () => { const z = document.createElement("div"); z.className = "zoom"; z.innerHTML = `<img src="${esc(imgUrl(c, 400).replace(/_400w\./, "_1000w."))}" alt="${esc(c.n)}">`; z.onclick = () => z.remove(); document.body.appendChild(z); },
     wish: () => { haptic(); store.update((s) => toggleWish(s, c.i), "wishlist", "wishFolders"); ctx.toast(isWished(state, c.i) ? "Added to wishlist" : "Removed from wishlist"); },
-    folders: () => ctx.toast("Folders come with the Wishlist screen"),
+    folders: () => ctx.router.setQuery({ sheet: "folders" }, { replace: false }),
     tog: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) > 0 ? 0 : 1),
     inc: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) + 1),
     dec: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) - 1),
@@ -54,10 +56,22 @@ export function mountCardSheet(host, ctx, pid) {
   let y0 = null;
   sheet.addEventListener("touchstart", (e) => { if ($(".body", host).scrollTop <= 0) y0 = e.touches[0].clientY; }, { passive: true });
   sheet.addEventListener("touchend", (e) => { if (y0 != null && e.changedTouches[0].clientY - y0 > 90) ctx.back(); y0 = null; }, { passive: true });
+  let picker = null;
+  function pickerHtml() { return `<div class="stack">${state.wishFolders.map((f) => { const on = !!(f.items && f.items[String(c.i)]); return `<button class="card vrow toggle ${on ? "has" : ""}" data-action="tf" data-fid="${esc(f.id)}"><div class="vi"><div class="vn">${esc(f.name)}</div><div class="vp num">${folderCount(f)} card${folderCount(f) === 1 ? "" : "s"}</div></div><span class="vcheck"><i>${on ? I.check : ""}</i></span></button>`; }).join("")}<button class="btn ghost" data-action="nf">${I.plus} New folder</button></div>`; }
+  function openPicker(on) {
+    if (picker) picker.unmount(); picker = null;
+    if (!on || !c) return;
+    picker = mountSheet($("#sheets2"), ctx, { title: "Wishlist folders", html: pickerHtml(), actions: {
+      tf: (el) => { haptic(); store.update((s) => toggleCardFolder(s, c.i, el.dataset.fid), "wishFolders", "wishlist"); picker.repaint(pickerHtml()); },
+      nf: () => { const nm = prompt("New folder name"); if (nm && nm.trim()) store.update((s) => { const f = addFolder(s, nm); if (f) toggleCardFolder(s, c.i, f.id); }, "wishFolders", "wishlist"); picker.repaint(pickerHtml()); },
+    } });
+  }
   paint();
+  openPicker(ctx.route.query.sheet === "folders");
   if (loading) app.loadSetPricing(c.sid).catch(() => {}).finally(() => { loading = false; paint(); });
   return {
+    route: (r) => openPicker(r.query.sheet === "folders"),
     update: (changed) => { if (changed.has("owned") || changed.has("flatPrices") || changed.has("wishlist") || changed.has("wishFolders")) paint(); },
-    unmount: () => { off(); dim.classList.remove("open"); sheet.classList.remove("open"); document.body.style.overflow = ""; setTimeout(() => { if (!host.contains(sheet) || !sheet.classList.contains("open")) host.innerHTML = ""; }, 260); },
+    unmount: () => { off(); if (picker) picker.unmount(); dim.classList.remove("open"); sheet.classList.remove("open"); document.body.style.overflow = ""; setTimeout(() => { if (!sheet.classList.contains("open")) { sheet.remove(); dim.remove(); } }, 260); },
   };
 }

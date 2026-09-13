@@ -14,7 +14,7 @@ export const LS = {
   OWNED: "pv3_owned", WISH: "pv3_wishlist", PRICES: "pv3_prices", TRACKED: "pv3_tracked",
   FAV: "pv4_favorites", META: "pv2_catalog_meta", HISTORY: "pv4_history", PREFS: "pv4_prefs",
   SYNC: "pv4_sync", DIRTY: "pv4_dirty", WFOLDERS: "pv4_wishfolders", SETDATES: "pv4_setdates",
-  LEGACY_COLLECTION: "pv2_collection",
+  LEGACY_COLLECTION: "pv2_collection", PRICES_AT: "pv5_pricesat",
 };
 export const IDB_NAME = "pokevault";
 export const IDB_STORE = "catalog";
