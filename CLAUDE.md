@@ -10,7 +10,11 @@ Design reference (chosen direction "C · Bulbasaur dusk", light + dark, all scre
 
 ### Layout
 
-- `app.html` — the new shell (phase 1: a diagnostics page that boots the modules; the real UI replaces it screen by screen)
+- `app.html` — the new app shell (nav, screen host, sheet hosts); registers `sw.js`, links `manifest.webmanifest` + `icons/`
+- `styles/tokens.css` (design tokens, light + dark) and `styles/app.css` (components)
+- `src/ui/` — `shell.js` (nav, theme, screen/sheet hosts, SW registration), `router.js` (hash router: screen state lives in the URL, `?card=` and `?sheet=` are overlays so hardware back closes them), `dom.js` (helpers: `delegate`, `imgTag`, `sparkline`, `haptic`, `toast`), `icons.js`, `sheet.js` (generic bottom sheet), `filters.js` (shared sort/filter logic + sheet markup), `screens/*.js` — each exports `mount(root, ctx) → { update(changed), route(r), unmount }`
+- `sw.js` — service worker: app shell precached (bump `VERSION` on every deploy; `tests/sw.test.js` fails if a module is missing from the list), card images stale-while-revalidate, API network-only
+- `scripts/serve.mjs` — no-cache dev server (`npm run serve`, then open http://127.0.0.1:8080/app.html)
 - `src/constants.js` — API base, categories, storage keys, regexes, the static catalog URL
 - `src/util.js` — `esc`, `money`, `cleanName`, `cmpNum`, `cmpSid`, `today`
 - `src/catalog.js` — `normalizeProduct`, `indexCatalog` → `{ byId, bySet }` (**both keyed by string ids**), `isSealedProduct`, `patternOf`, `variantRank`, `shortVariant`, `isChaseRarity`, `isHighValueRarity`, `groupPrintings`, `newestSets`
@@ -34,10 +38,15 @@ Design reference (chosen direction "C · Bulbasaur dusk", light + dark, all scre
 
 ### Rebuild plan
 
-1. ✅ Foundation: modules + 45 tests + static catalog build + `app.html` boot page.
-2. UI shell against the design: tokens/theme (light + dark), bottom nav (Home · Sets · Search · Collection · Wishlist), router with history so back closes sheets, then screens in order Sets → set detail (list + 3×3 binder) → card sheet → Search → Collection → Wishlist → Home → Settings.
-3. PWA: service worker (app shell + image cache), manifest, offline indicators; haptics; skeletons.
-4. Cut over: rename `app.html` → `index.html`, delete `PokeVault.html`, update README.
+1. ✅ Foundation: modules + tests + static catalog build.
+2. ✅ UI: tokens/theme (light + dark), bottom nav (Home · Sets · Search · Collection · Wishlist), hash router, all screens + Settings.
+3. ✅ PWA: service worker (shell precache + image cache), manifest + icons, "Download images for offline use", haptics, skeleton fade-in.
+4. Cut over (pending the user's go): push the branch, enable GitHub Pages (or Netlify) for it, try it on the phone, run the catalog workflow once so `catalog-data` exists, then rename `app.html` → `index.html`, remove `PokeVault.html`, update README.
+
+### Not yet ported from the legacy app / known gaps
+- Sync is still last-write-wins (per-key merge is a planned improvement).
+- No news panel (was already dormant).
+- Set detail's rarity dropdown is a native `<select>` styled as a chip.
 
 ---
 

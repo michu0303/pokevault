@@ -63,5 +63,12 @@ export function mountShell(app, screens) {
     if (sheet && sheet.update) sheet.update(changed);
   });
   router.start();
+  window.addEventListener("offline", () => toast("You’re offline — cached cards and prices only"));
+  window.addEventListener("online", () => toast("Back online"));
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    navigator.serviceWorker.register("./sw.js").then((reg) => {
+      reg.addEventListener("updatefound", () => { const w = reg.installing; if (!w) return; w.addEventListener("statechange", () => { if (w.state === "installed" && navigator.serviceWorker.controller) toast("Update ready — it loads next time you open PokéVault"); }); });
+    }).catch(() => {});
+  }
   return { router, ctx };
 }

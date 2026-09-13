@@ -59,6 +59,7 @@ Validated as a real need: app was used at a card show with poor signal. Catalog 
 
 ## Completed
 
+- [x] **Rebuild phases 2–3 — UI + PWA** (branch `rebuild`): every screen rebuilt on the C design in light + dark (`app.html`), hash router with back-closes-sheets, 44px targets, haptics, skeletons, in-place ownership patching, service worker + manifest + offline image download. Ships the backlog items: tap targets, haptics, image placeholders, hardware back, dark theme, empty states, passphrase fingerprint, price age, responsive 4-col search grid.
 - [x] **Rebuild phase 1 — foundation** (branch `rebuild`): pure logic extracted into `src/*.js`, 45 tests on real API fixtures (`npm test`), static catalog build script + daily GitHub Action, `app.html` boot page. Design direction C (Bulbasaur dusk, light + dark) chosen and mocked for every screen.
 
 - [x] **Include wishlist folders in JSON export/import** — commit `62ce869`.

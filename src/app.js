@@ -129,6 +129,22 @@ export function createApp({ ls = globalThis.localStorage, idb = globalThis.index
   }
   function disconnectSync() { state.sync = { url: "", key: "", pass: "" }; store.update(() => {}, "sync"); setSync(""); }
 
+  /** cards worth having offline: owned + wishlisted + every card of tracked sets */
+  function offlineImageUrls() {
+    const urls = new Set();
+    const add = (c) => { if (c && c.g) urls.add(c.g); };
+    for (const pid of [...Object.keys(state.owned), ...Object.keys(state.wishlist)]) add(state.byId.get(pid));
+    for (const sid of Object.keys(state.tracked)) { const g = state.bySet.get(String(sid)); if (g) for (const c of g.cards) add(c); }
+    return [...urls];
+  }
+  /** fetch each image once through the service worker so it lands in the image cache */
+  async function warmImages(onProgress, concurrency = 6) {
+    const urls = offlineImageUrls(); let i = 0, done = 0, failed = 0;
+    async function worker() { while (i < urls.length) { const u = urls[i++]; try { await fetchImpl(u, { mode: "no-cors" }); } catch (e) { failed++; } done++; if (onProgress) onProgress({ done, total: urls.length, failed }); } }
+    await Promise.all(Array.from({ length: Math.min(concurrency, urls.length) }, worker));
+    return { done, failed, total: urls.length };
+  }
+
   async function boot() {
     const had = await openCatalog();
     if (had && !Object.keys(state.setDates).length) fetchSetDates(fetchImpl).then((m) => { if (Object.keys(m).length) store.update((s) => { s.setDates = { ...s.setDates, ...m }; }, "setDates"); }).catch(() => {});
@@ -137,5 +153,5 @@ export function createApp({ ls = globalThis.localStorage, idb = globalThis.index
     return had;
   }
 
-  return { store, state, boot, openCatalog, buildCatalog, loadSetPricing, refreshValues, logSnapshot, initSync, pushNow, connectSync, finishConnect, disconnectSync };
+  return { store, state, boot, openCatalog, buildCatalog, loadSetPricing, refreshValues, logSnapshot, initSync, pushNow, connectSync, finishConnect, disconnectSync, offlineImageUrls, warmImages };
 }
