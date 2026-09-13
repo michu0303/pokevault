@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { looksSealed, isSealedProduct, patternOf, patSort, normalizeProduct, indexCatalog, variantRank, shortVariant, isChaseRarity, isHighValueRarity, groupPrintings, newestSets, findGroup } from "../src/catalog.js";
+import { looksSealed, isSealedProduct, productKind, patternOf, patSort, normalizeProduct, indexCatalog, variantRank, shortVariant, isChaseRarity, isHighValueRarity, groupPrintings, newestSets, findGroup } from "../src/catalog.js";
 import { cleanName, cmpNum, cmpSid } from "../src/util.js";
 import { fixture, catalogFrom, byName } from "./helpers.js";
 
@@ -17,7 +17,8 @@ test("isSealedProduct: rarity is the primary signal", () => {
   assert.equal(ib.n, "Iron Bundle");
   assert.equal(isSealedProduct(ib), false);
   assert.equal(isSealedProduct({ n: "Prismatic Evolution Booster Bundle Display Case", r: "" }), true);
-  assert.equal(isSealedProduct({ n: "Some Box", r: "Common" }), false, "a rarity-bearing card is never sealed");
+  assert.equal(isSealedProduct({ n: "Some Box", r: "Common", nu: "12/100" }), false, "a numbered, rarity-bearing card is never sealed");
+  assert.equal(isSealedProduct({ n: "Some Box", r: "Common", nu: "" }), true, "no number + box word = sealed even with a rarity");
 });
 test("patternOf / patSort", () => {
   assert.equal(patternOf("Exeggcute (Poke Ball Pattern)"), "Poké Ball");
@@ -85,4 +86,22 @@ test("util: cleanName, cmpNum, cmpSid", () => {
   assert.ok(cmpNum("RC29", "RC30") < 0);
   assert.ok(cmpNum("", "1") > 0, "empty numbers sort last");
   assert.ok(cmpSid("23821", 23651) > 0);
+});
+
+test("productKind: boxes with card rarities, tins and code cards are not master-set cards", () => {
+  const f = fixture("ascended");
+  const kinds = Object.fromEntries(f.products.map((p) => { const e = normalizeProduct(p, f.set); return [e.n.replace(/ - \d.*$/, ""), productKind(e)]; }));
+  assert.equal(kinds["Code Card - Ascended Heroes Booster Pack"], "code");
+  assert.equal(kinds["Ascended Heroes Mega Meganium ex Box"], "sealed", "Double Rare rarity but no number and 'Box'");
+  assert.equal(kinds["Ascended Heroes Mini Tins 5-Pack"], "sealed");
+  assert.equal(kinds["Erika's Tangela"], "card");
+  assert.equal(kinds["Erika's Oddish"], "card");
+  assert.equal(productKind({ n: "Amulet Coin", nu: "97/106", r: "Uncommon" }), "card", "numbered cards keep sealed-looking words");
+  assert.equal(productKind({ n: "Fire Energy", nu: "", r: "Common" }), "card", "unnumbered energies stay cards");
+  const { bySet, byId } = catalogFrom("ascended");
+  const g = bySet.get("24541");
+  assert.equal(g.groups.length, 2, "only the two real cards form groups");
+  assert.equal(g.sealed.length, 2);
+  assert.equal(byId.size, 5, "code cards stay resolvable by id");
+  assert.equal([...byId.values()].filter((c) => c.code).length, 1);
 });

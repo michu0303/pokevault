@@ -1,0 +1,50 @@
+{
+ "set": {
+  "id": 24541,
+  "name": "ME: Ascended Heroes",
+  "cat": 3,
+  "published_on": "2026-01-30"
+ },
+ "products": [
+  {
+   "id": 677186,
+   "name": "Code Card - Ascended Heroes Booster Pack",
+   "clean_name": "Code Card - Ascended Heroes Booster Pack",
+   "number": null,
+   "rarity": "Code Card",
+   "image_url": "https://cdn.tcgtracking.com/product/677186_200w.jpg"
+  },
+  {
+   "id": 672733,
+   "name": "Ascended Heroes Mega Meganium ex Box",
+   "clean_name": "Ascended Heroes Mega Meganium ex Box",
+   "number": null,
+   "rarity": "Double Rare",
+   "image_url": "https://cdn.tcgtracking.com/product/672733_200w.jpg"
+  },
+  {
+   "id": 668530,
+   "name": "Ascended Heroes Mini Tins 5-Pack",
+   "clean_name": "Ascended Heroes Mini Tins 5-Pack",
+   "number": null,
+   "rarity": null,
+   "image_url": "https://cdn.tcgtracking.com/product/668530_200w.jpg"
+  },
+  {
+   "id": 676030,
+   "name": "Erika's Tangela - 218/217",
+   "clean_name": "Erika's Tangela - 218/217",
+   "number": "218/217",
+   "rarity": "Illustration Rare",
+   "image_url": "https://cdn.tcgtracking.com/product/676030_200w.jpg"
+  },
+  {
+   "id": 675813,
+   "name": "Erika's Oddish",
+   "clean_name": "Erika's Oddish",
+   "number": "001/217",
+   "rarity": "Common",
+   "image_url": "https://cdn.tcgtracking.com/product/675813_200w.jpg"
+  }
+ ]
+}

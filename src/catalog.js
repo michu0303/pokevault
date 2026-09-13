@@ -1,12 +1,21 @@
 // Catalog model: normalising API products, sealed detection, card grouping,
 // variant ordering and rarity classes. Pure — no DOM, no storage.
-import { SEALED_RE, CHASE_RE, HIVALUE_RE, CAT } from "./constants.js";
+import { SEALED_RE, SEALED_NONUM_RE, CODE_RE, CHASE_RE, HIVALUE_RE, CAT } from "./constants.js";
 import { cleanName, cmpNum } from "./util.js";
 
 export function looksSealed(name) { return SEALED_RE.test(name || ""); }
-/** The API gives every real card a rarity and leaves sealed products without
- *  one, so a non-empty rarity overrides the name regex ("Iron Bundle"). */
-export function isSealedProduct(p) { return !p.r && looksSealed(p.n); }
+/** "card" | "sealed" | "code". Real cards have a rarity; sealed products
+ *  usually have none ("Iron Bundle" has one, so it stays a card). Products
+ *  with NO collector number and a sealed-looking name are sealed even with a
+ *  card rarity (the API labels "… ex Box" as Double Rare). Code cards are
+ *  neither. */
+export function productKind(p) {
+  if (CODE_RE.test(p.r || "") || CODE_RE.test(p.n || "")) return "code";
+  if (!p.r && looksSealed(p.n)) return "sealed";
+  if (!p.nu && (looksSealed(p.n) || SEALED_NONUM_RE.test(p.n || ""))) return "sealed";
+  return "card";
+}
+export function isSealedProduct(p) { return productKind(p) === "sealed"; }
 
 /** In pattern-reverse sets the patterned reverses are their own products,
  *  "… (Poke Ball Pattern)" / "… (Energy Symbol Pattern)". Returns a short
@@ -42,13 +51,15 @@ export function normalizeProduct(p, set) {
 export function indexCatalog(catalog) {
   const byId = new Map(), bySet = new Map();
   for (const c of catalog) {
-    c.sealed = isSealedProduct(c);
+    const kind = productKind(c);
+    c.sealed = kind === "sealed"; c.code = kind === "code";
+    byId.set(String(c.i), c);
+    if (c.code) { c._hay = ""; continue; }                 // not a card, not searchable
     c._nameLow = (c.n || "").toLowerCase();
     c._setLow = (c.s || "").toLowerCase();
     c._nuLow = String(c.nu || "").toLowerCase();
     c._hay = c._nameLow + " " + c._setLow + " " + c._nuLow;
     c._nameWords = c._nameLow.split(/\s+/);
-    byId.set(String(c.i), c);
     const sid = String(c.sid);
     let g = bySet.get(sid);
     if (!g) { g = { sid, name: c.s || ("Set " + sid), cat: c.cat || CAT, cards: [], sealed: [], groups: [] }; bySet.set(sid, g); }

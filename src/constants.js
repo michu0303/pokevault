@@ -23,6 +23,13 @@ export const IDB_STORE = "catalog";
 // sealed-context prefix (booster|pack|battle|premium|art|sleeved). Bare
 // "bundle" would catch the Pokémon "Iron Bundle" (Surging Sparks #055).
 export const SEALED_RE = /\b(booster|box|tin|blister|elite trainer|build\s*&?\s*battle|collection|gift set|display|case|theme deck|battle deck|starter|toolkit|calendar)\b|\b(booster|pack|battle|premium|art|sleeved)\s+bundle\b/i;
+// A product with NO collector number and one of these words is a sealed
+// product even when the API gives it a card rarity ("… Mega Meganium ex Box"
+// is "Double Rare", "Mini Tins 5-Pack" has none). Numbered cards named
+// "Amulet Coin" or "Legend Box" are unaffected because they have numbers.
+export const SEALED_NONUM_RE = /\b(tins?|decks?|kit|bundle|packs?|box|boxes|binder|sleeves|playmat|coins?|dice|poster|figure|pins?|lanyard|case|collection|display|blister|bundle|set)\b/i;
+// Online code cards are not physical cards: dropped from sets and search.
+export const CODE_RE = /^code card\b|\bcode card\b/i;
 // Rarities whose quantity matters (value) — these get steppers, not toggles.
 export const CHASE_RE = /double rare|ultra|illustration|hyper|secret|rainbow|amazing|radiant|shiny|prism|legend|break|prime|\bgx\b|\bex\b|vmax|vstar|v-?union|\bv\b|lv\.?\s?x|holo star|\bace\b/i;
 // Ultra Rare and higher — the Collection tab's rarity filter.
