@@ -301,3 +301,4 @@ html{scrollbar-gutter:stable}
 .pocket.miss .badge{display:none}
 /* cards/sealed switch sits above the filters, not inside the progress card */
 .secseg{margin-bottom:-4px}
+.pricebox .chart{width:100%;height:110px;margin:0}
