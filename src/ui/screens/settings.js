@@ -13,7 +13,7 @@ export function mount(root, ctx) {
   function paint() {
     const m = state.catalogMeta, b = state.build;
     root.innerHTML = `
-      <div class="topbar tight"><button class="iconbtn" data-action="back" aria-label="Back">${I.back}</button><h1 class="sm">Settings</h1></div>
+      <div class="topbar tight"><button class="iconbtn back" data-action="back" aria-label="Back">${I.back}</button><h1 class="sm">Settings</h1></div>
       <div class="card panel"><h3>Appearance</h3><div class="seg">${[["system", "System"], ["light", "Light"], ["dark", "Dark"]].map(([k, l]) => `<button class="${state.prefs.theme === k ? "on" : ""}" data-action="theme" data-theme="${k}">${l}</button>`).join("")}</div></div>
       <div class="card panel"><h3>Card database</h3>
         <p>${m ? `${(m.count || state.catalog.length).toLocaleString()} products · built ${m.builtAt ? new Date(m.builtAt).toLocaleDateString() : "—"}${m.source ? " · " + (m.source === "static" ? "pre-built download" : "crawled from the API") : ""}` : "Not downloaded on this device yet. It's about 1 MB and takes a few seconds."}</p>

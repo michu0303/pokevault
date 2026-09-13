@@ -51,14 +51,17 @@ export function applySetPricing(flatPrices, prices, setGroup) {
   return dropPatternReverseDupes(flatPrices, setGroup);
 }
 
-export function variantsFor(flatPrices, pid) {
+/** ordered printings of a product. With no prices yet (offline, first open)
+ *  fall back to the printings you already own so checks still show, then "Default". */
+export function variantsFor(flatPrices, pid, owned) {
   const vp = flatPrices[String(pid)];
-  const ks = vp ? Object.keys(vp) : [];
+  let ks = vp ? Object.keys(vp) : [];
+  if (!ks.length && owned && owned[String(pid)]) ks = Object.keys(owned[String(pid)]);
   if (!ks.length) return ["Default"];
   return ks.slice().sort((a, b) => variantRank(a) - variantRank(b) || a.localeCompare(b));
 }
-export function primaryVariant(flatPrices, pid) {
-  const vs = variantsFor(flatPrices, pid);
+export function primaryVariant(flatPrices, pid, owned) {
+  const vs = variantsFor(flatPrices, pid, owned);
   return vs.find((v) => !/reverse/i.test(v)) || vs[0];
 }
 export function priceOf(flatPrices, pid, variant) {

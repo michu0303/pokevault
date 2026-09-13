@@ -83,7 +83,7 @@ export function createApp({ ls = globalThis.localStorage, idb = globalThis.index
     logSnapshot();
     return { done, failed };
   }
-  function logSnapshot() { store.update((s) => { s.history = snapshot(s.history, s.owned, s.flatPrices); }, "history"); }
+  function logSnapshot() { store.update((s) => { s.history = snapshot(s.history, s.owned, s.flatPrices, undefined, s.wishlist); }, "history"); }
 
   /* ---------- sync ---------- */
   let pushTimer = null;

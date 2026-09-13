@@ -14,7 +14,7 @@ export function getQty(owned, pid, variant) { const o = owned[String(pid)]; retu
 export function ownedTotal(owned, pid) { const o = owned[String(pid)]; if (!o) return 0; let s = 0; for (const v in o) s += o[v]; return s; }
 /** "none" | "partial" (some printings) | "complete" (≥1 of every printing) */
 export function ownState(owned, flatPrices, pid) {
-  const variants = variantsFor(flatPrices, pid);
+  const variants = variantsFor(flatPrices, pid, owned);
   let have = 0;
   for (const v of variants) if (getQty(owned, pid, v) > 0) have++;
   if (have === 0) return "none";
@@ -42,7 +42,7 @@ export function setQty(owned, pid, variant, qty) {
  *  printing has qty > 1, because clearing it would silently lose a count. */
 export function quickToggle(owned, flatPrices, pid) {
   const o = owned[String(pid)] || {};
-  const variants = variantsFor(flatPrices, pid);
+  const variants = variantsFor(flatPrices, pid, owned);
   if (ownState(owned, flatPrices, pid) === "complete") {
     if (Object.keys(o).some((v) => o[v] > 1)) return false;
     for (const v of variants) setQty(owned, pid, v, 0);
@@ -55,7 +55,7 @@ export function quickToggle(owned, flatPrices, pid) {
 export function quickToggleGroup(owned, flatPrices, grp) {
   for (const p of grp.products) { const o = owned[String(p.i)] || {}; if (Object.keys(o).some((v) => o[v] > 1)) return false; }
   const complete = groupState(owned, flatPrices, grp) === "complete";
-  for (const p of grp.products) for (const v of variantsFor(flatPrices, p.i)) {
+  for (const p of grp.products) for (const v of variantsFor(flatPrices, p.i, owned)) {
     if (complete) setQty(owned, p.i, v, 0); else if (getQty(owned, p.i, v) < 1) setQty(owned, p.i, v, 1);
   }
   return true;

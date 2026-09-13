@@ -1,10 +1,11 @@
 // Card detail sheet: art on a dark stage, price + 30-day line, printings, links.
 import { I } from "../icons.js";
-import { esc, money, delegate, haptic, imgUrl, sparkline, $ } from "../dom.js";
+import { esc, money, delegate, haptic, imgUrl, displayName, $ } from "../dom.js";
 import { getQty, setQty, ownedTotal, isWished, toggleWish, cardFolders } from "../../collection.js";
 import { isChaseRarity, patternOf, shortVariant } from "../../catalog.js";
 import { variantsFor, priceOf, primaryVariant } from "../../pricing.js";
-import { productSeries } from "../../history.js";
+import { productSeries, rangeSeries } from "../../history.js";
+import { lineChart, seriesDelta, rangeChips, deltaLine } from "../chart.js";
 import { CAT_JP } from "../../constants.js";
 import { mountSheet } from "../sheet.js";
 import { askText } from "../dialog.js";
@@ -22,20 +23,21 @@ export function mountCardSheet(host, ctx, pid) {
     const body = $("[data-region=body]", host);
     if (!c) { body.innerHTML = `<div class="empty">Card not found in the local catalog.</div>`; return; }
     const g = state.bySet.get(String(c.sid));
-    const vs = variantsFor(state.flatPrices, c.i), pv = primaryVariant(state.flatPrices, c.i), px = priceOf(state.flatPrices, c.i, pv);
+    const vs = variantsFor(state.flatPrices, c.i, state.owned), pv = primaryVariant(state.flatPrices, c.i, state.owned), px = priceOf(state.flatPrices, c.i, pv);
     const owned = ownedTotal(state.owned, c.i), chase = c.sealed || isChaseRarity(c.r);
-    const series = productSeries(state.history, c.i).map((p) => p.v).filter((v) => v > 0);
-    const first = series[0], last = series[series.length - 1];
-    const delta = series.length > 1 && owned ? (last - first) / owned : null;
+    const range = state.ui.cardRange || "30";
+    const series = rangeSeries(productSeries(state.history, c.i), +range);
+    const delta = seriesDelta(series);
     const wished = isWished(state, c.i), folders = cardFolders(state, c.i);
     body.innerHTML = `
       <div class="stage"><div class="bigart" data-action="zoom"><img src="${esc(imgUrl(c, 400))}" alt="${esc(c.n)}"></div>
         <div class="sub">${esc(g ? g.name : c.s)}${c.nu ? " · #" + esc(c.nu) : ""}${c.r ? " · " + esc(c.r) : ""}</div>
         <div class="pills"><span>${c.cat === CAT_JP ? "Japanese" : "English"}</span>${owned ? `<span>Owned ${owned}</span>` : ""}${patternOf(c.n) ? `<span>${esc(patternOf(c.n))} pattern</span>` : ""}</div></div>
-      <div class="title"><h3>${esc(c.n)}</h3>
+      <div class="title"><h3>${esc(displayName(c))}</h3>
         <button class="iconbtn boxed ${wished ? "on" : ""}" data-action="wish" aria-label="${wished ? "Remove from wishlist" : "Add to wishlist"}">${wished ? I.heartF : I.heart}</button>
         <button class="iconbtn boxed ${folders.length ? "on" : ""}" data-action="folders" aria-label="Wishlist folders">${I.folder}</button></div>
-      <div class="card pricebox"><div><div class="pv num">${loading ? "…" : money(px)}</div><div class="pl">${loading ? "Loading prices" : px == null ? "No market price" : "Market" + (delta != null && Math.abs(delta) >= 0.01 ? " · " + (delta > 0 ? "▲" : "▼") + " " + money(Math.abs(delta)) + " over " + series.length + " days" : "")}</div></div>${series.length > 1 ? sparkline(series) : ""}</div>
+      <div class="card pricebox" style="flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><div class="pv num">${loading ? "…" : money(px)}</div><div class="pl">${loading ? "Loading prices" : px == null ? "No market price" : "Market · " + esc(pv)}</div></div>
+        ${series.length > 1 ? `<div class="pl">${deltaLine(delta)}</div>${lineChart(series, { h: 110 })}${rangeChips(range, "crange")}` : `<div class="pl">Price history builds up one point per day while this card is owned or wishlisted.</div>`}</div>
       <div class="stack">${vs.map((v) => { const q = getQty(state.owned, c.i, v), p = priceOf(state.flatPrices, c.i, v);
         return chase
           ? `<div class="card vrow ${q ? "has" : ""}"><div class="vi"><div class="vn">${esc(shortVariant(v) === "Normal" && vs.length === 1 ? (c.sealed ? "Sealed" : v) : v)}</div><div class="vp num">${p != null ? money(p) + " each" : "price unavailable"}</div></div><div class="stepper"><button data-action="dec" data-v="${esc(v)}" aria-label="Remove one">−</button><span class="q num">${q}</span><button data-action="inc" data-v="${esc(v)}" aria-label="Add one">+</button></div></div>`
@@ -52,6 +54,7 @@ export function mountCardSheet(host, ctx, pid) {
     inc: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) + 1),
     dec: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) - 1),
     openset: () => { ctx.go("/sets/" + c.sid); },
+    crange: (el) => { state.ui.cardRange = el.dataset.v; paint(); },
   });
   // swipe down on the grip / stage closes
   let y0 = null;

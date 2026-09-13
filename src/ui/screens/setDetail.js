@@ -1,7 +1,7 @@
 // Set detail: progress, filters, list view (44px printing checks) and the
 // 3×3 binder. View state lives in the route query so back/forward work.
 import { I } from "../icons.js";
-import { esc, money, delegate, progressRing, haptic, imgTag, imgUrl, $ } from "../dom.js";
+import { esc, money, delegate, progressRing, haptic, imgTag, imgUrl, displayName, $ } from "../dom.js";
 import { setStats, groupState, ownState, getQty, setQty, ownedTotal, isTracked, toggleSetStar } from "../../collection.js";
 import { groupPrintings, isChaseRarity } from "../../catalog.js";
 import { variantsFor, priceOf } from "../../pricing.js";
@@ -12,16 +12,16 @@ export function mount(root, ctx) {
   const { state, store, app } = ctx;
   const sid = String(ctx.route.parts[1] || "");
   const g = state.bySet.get(sid);
-  if (!g) { root.innerHTML = `<div class="topbar tight"><button class="iconbtn" data-action="back">${I.back}</button><h1 class="sm">Set</h1></div><div class="empty">This set isn't in the local catalog.</div>`; delegate(root, { back: () => ctx.back() }); return {}; }
+  if (!g) { root.innerHTML = `<div class="topbar tight"><button class="iconbtn back" data-action="back">${I.back}</button><h1 class="sm">Set</h1></div><div class="empty">This set isn't in the local catalog.</div>`; delegate(root, { back: () => ctx.back() }); return {}; }
   let route = ctx.route;
   const qv = () => ({ view: route.query.view || (state.prefs.binder ? "binder" : "list"), f: route.query.f || "all", r: route.query.r || "", sec: route.query.sec || "cards", page: Math.max(0, parseInt(route.query.page || "0", 10) || 0) });
   let pricesLoading = !state.priceCache[sid];
   // Black Bolt / White Flare: the user collects only the IR / SIR chase from these two English sets
   const restricted = g.cat !== CAT_JP && /black bolt|white flare/i.test(g.name);
-  const vf = (pid) => variantsFor(state.flatPrices, pid);
+  const vf = (pid) => variantsFor(state.flatPrices, pid, state.owned);
 
   root.innerHTML = `
-    <div class="topbar tight"><button class="iconbtn" data-action="back" aria-label="Back">${I.back}</button><h1 class="sm">${esc(g.name)}</h1><button class="iconbtn" data-action="star" aria-label="Track set"></button></div>
+    <div class="topbar tight"><button class="iconbtn back" data-action="back" aria-label="Back">${I.back}</button><h1 class="sm">${esc(g.name)}</h1><button class="iconbtn star" data-action="star" aria-label="Track set"></button></div>
     <div class="card prog" data-region="prog"></div>
     <div class="filtrow" data-region="filters"></div>
     <div data-region="body"></div>`;
@@ -64,7 +64,7 @@ export function mount(root, ctx) {
     const body = $("[data-region=body]", root);
     if (sec === "sealed") {
       body.innerHTML = `<div class="stack">${g.sealed.map((p) => { const q = ownedTotal(state.owned, p.i), v = vf(p.i)[0], px = priceOf(state.flatPrices, p.i, v);
-        return `<div class="card crow"><div class="tap" data-action="card" data-pid="${p.i}"><div class="thumb">${imgTag(imgUrl(p), p.n)}</div><div class="info"><div class="nm">${esc(p.n)}</div><div class="meta num">${px != null ? money(px) + " each" : "price unavailable"}</div></div></div>
+        return `<div class="card crow"><div class="tap" data-action="card" data-pid="${p.i}"><div class="thumb">${imgTag(imgUrl(p), p.n)}</div><div class="info"><div class="nm">${esc(displayName(p))}</div><div class="meta num">${px != null ? money(px) + " each" : "price unavailable"}</div></div></div>
           <div class="stepper"><button data-action="dec" data-pid="${p.i}" data-v="${esc(v)}" aria-label="Remove one">−</button><span class="q num">${q}</span><button data-action="inc" data-pid="${p.i}" data-v="${esc(v)}" aria-label="Add one">+</button></div></div>`; }).join("") || `<div class="empty">No sealed products in this set.</div>`}</div>`;
       return;
     }

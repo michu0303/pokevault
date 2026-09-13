@@ -28,5 +28,6 @@ export const CHASE_RE = /double rare|ultra|illustration|hyper|secret|rainbow|ama
 // Ultra Rare and higher — the Collection tab's rarity filter.
 export const HIVALUE_RE = /ultra|illustration|hyper|secret|rainbow|gold|crown|shiny|amazing|radiant|prism|vmax|vstar|legend|lv\.?\s?x|\bstar\b/i;
 
-export const HISTORY_MAX = 24;
+export const HISTORY_MAX = 365;        // daily totals kept for a year
+export const HISTORY_DETAIL_DAYS = 60;  // per-card prices kept for two months
 export const SEARCH_LIMIT = 240;

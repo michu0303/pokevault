@@ -1,6 +1,6 @@
 // Wishlist: folder strip + unsorted cards; /wishlist/<folderId> is a folder.
 import { I } from "../icons.js";
-import { esc, money, delegate, imgTag, imgUrl, haptic, $ } from "../dom.js";
+import { esc, money, delegate, imgTag, imgUrl, haptic, artFan, displayName, $ } from "../dom.js";
 import { toggleWish, unsortedWishlist, findFolder, folderCount, addFolder, renameFolder, deleteFolder } from "../../collection.js";
 import { applyFilters, applySort, activeCount, sortHtml, filtersHtml, filterActions, raritiesOf, setsOf, SORTS, cardValue } from "../filters.js";
 import { mountSheet } from "../sheet.js";
@@ -14,23 +14,23 @@ export function mount(root, ctx) {
   let sheet = null, setQ = "";
   const folder = () => (fid ? findFolder(state, fid) : null);
   const cards = () => (fid ? Object.keys((folder() || {}).items || {}) : unsortedWishlist(state)).map((pid) => state.byId.get(pid)).filter(Boolean);
-  const row = (c) => `<div class="card crow"><div class="tap" data-action="card" data-pid="${c.i}"><div class="thumb">${imgTag(imgUrl(c), c.n)}</div><div class="info"><div class="nm">${esc(c.n)}</div><div class="meta">${esc(c.s)}${c.nu ? " · " + esc(c.nu) : ""}${c.cat === CAT_JP ? " · JP" : ""}</div></div></div><div class="val"><b class="num">${money(cardValue(c, state) || null)}</b></div><button class="heartbtn" data-action="unwish" data-pid="${c.i}" aria-label="Remove from wishlist">${I.heartF}</button></div>`;
+  const row = (c) => `<div class="card crow"><div class="tap" data-action="card" data-pid="${c.i}"><div class="thumb">${imgTag(imgUrl(c), c.n)}</div><div class="info"><div class="nm">${esc(displayName(c))}</div><div class="meta">${esc(c.s)}${c.nu ? " · " + esc(c.nu) : ""}${c.cat === CAT_JP ? " · JP" : ""}</div></div></div><div class="val"><b class="num">${money(cardValue(c, state) || null)}</b></div><button class="heartbtn" data-action="unwish" data-pid="${c.i}" aria-label="Remove from wishlist">${I.heartF}</button></div>`;
   function paint() {
     const fo = folder();
-    if (fid && !fo) { root.innerHTML = `<div class="topbar tight"><button class="iconbtn" data-action="back">${I.back}</button><h1 class="sm">Folder</h1></div><div class="empty">This folder no longer exists.</div>`; return; }
+    if (fid && !fo) { root.innerHTML = `<div class="topbar tight"><button class="iconbtn back" data-action="back">${I.back}</button><h1 class="sm">Folder</h1></div><div class="empty">This folder no longer exists.</div>`; return; }
     const list = applySort(applyFilters(cards(), { ...f, type: "all" }, state), f.sort, state);
     const n = activeCount(f, false);
     const total = list.reduce((a, c) => a + (cardValue(c, state) || 0), 0);
     const hd = `<div class="hdbtns"><button class="iconbtn boxed ${f.sort !== "val-hi" ? "on" : ""}" data-action="sort" aria-label="Sort">${I.sort}</button><button class="iconbtn boxed ${n ? "on" : ""}" data-action="filters" aria-label="Filters">${I.filter}</button></div>`;
     if (fo) {
-      root.innerHTML = `<div class="topbar tight"><button class="iconbtn" data-action="back" aria-label="Back">${I.back}</button><h1 class="sm">${esc(fo.name)}</h1><button class="iconbtn" data-action="menu" aria-label="Folder options">${I.dots}</button></div>
+      root.innerHTML = `<div class="topbar tight"><button class="iconbtn back" data-action="back" aria-label="Back">${I.back}</button><h1 class="sm">${esc(fo.name)}</h1><button class="iconbtn boxed" data-action="menu" aria-label="Folder options">${I.dots}</button></div>
         <div class="card summary" style="padding:12px 16px"><div class="l">${folderCount(fo)} card${folderCount(fo) === 1 ? "" : "s"}</div><div class="v num" style="font-size:26px">${money(total)}</div><div class="s">${SORTS[f.sort]}</div></div>
         <div class="sec"><h2>Cards</h2>${hd}</div><div class="stack">${list.map(row).join("") || `<div class="empty">Nothing in this folder yet. Open a card and use the folder button.</div>`}</div>`;
       return;
     }
-    const strip = state.wishFolders.map((x) => { const v = Object.keys(x.items || {}).map((pid) => state.byId.get(pid)).filter(Boolean).reduce((a, c) => a + (cardValue(c, state) || 0), 0); return `<button class="card fcard" data-action="open" data-fid="${esc(x.id)}"><div class="fn">${esc(x.name)}</div><div class="fc num">${folderCount(x)} card${folderCount(x) === 1 ? "" : "s"} · ${money(v)}</div></button>`; }).join("");
+    const strip = state.wishFolders.map((x) => { const cs = Object.keys(x.items || {}).map((pid) => state.byId.get(pid)).filter(Boolean); const v = cs.reduce((a, c) => a + (cardValue(c, state) || 0), 0); const top = cs.slice().sort((a, b) => (cardValue(b, state) || 0) - (cardValue(a, state) || 0)); return `<button class="card stackcard" data-action="open" data-fid="${esc(x.id)}">${artFan(top)}<div class="fn">${esc(x.name)}</div><div class="fc num">${folderCount(x) ? `${folderCount(x)} card${folderCount(x) === 1 ? "" : "s"} · ${money(v)}` : "Empty"}</div></button>`; }).join("");
     root.innerHTML = `<div class="topbar"><h1>Wishlist</h1><button class="btn ghost sm" data-action="new">${I.plus} Folder</button></div>
-      ${state.wishFolders.length ? `<div class="fstrip chips">${strip}</div>` : ""}
+      ${state.wishFolders.length ? `<div class="fstrip">${strip}</div>` : ""}
       <div class="sec"><h2>Unsorted · ${cards().length}</h2>${hd}</div>
       <div class="stack">${list.map(row).join("") || (Object.keys(state.wishlist).length ? `<div class="empty">Every wishlisted card is filed in a folder.</div>` : `<div class="card empty"><b>Your wishlist is empty.</b><br>Search for a card and tap the heart.</div>`)}</div>`;
   }

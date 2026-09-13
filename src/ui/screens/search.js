@@ -1,7 +1,7 @@
 // Search: relevance-ranked results, recent searches, sort + filter sheets,
 // corner quick-own on tiles. Results are "plain" — no ownership greying.
 import { I } from "../icons.js";
-import { esc, money, delegate, imgTag, imgUrl, haptic, $ } from "../dom.js";
+import { esc, money, delegate, imgTag, imgUrl, haptic, displayName, $ } from "../dom.js";
 import { searchCatalog } from "../../search.js";
 import { ownState, quickToggle } from "../../collection.js";
 import { priceOf, primaryVariant } from "../../pricing.js";
@@ -40,7 +40,7 @@ export function mount(root, ctx) {
     const pv = primaryVariant(state.flatPrices, c.i), px = priceOf(state.flatPrices, c.i, pv);
     const st = ownState(state.owned, state.flatPrices, c.i);
     return `<div class="tile"><div class="art" data-action="card" data-pid="${c.i}">${imgTag(imgUrl(c), c.n)}</div>
-      <div class="info"><div class="nm">${esc(c.n)}</div><div class="pr num">${px != null ? money(px) : "—"}</div><div class="set">${esc(c.s)}${c.nu ? " · " + esc(c.nu) : ""}${c.cat === CAT_JP ? " · JP" : ""}</div></div>
+      <div class="info"><div class="nm">${esc(displayName(c))}</div><div class="pr num">${px != null ? money(px) : "—"}</div><div class="set">${esc(c.s)}${c.nu ? " · " + esc(c.nu) : ""}${c.cat === CAT_JP ? " · JP" : ""}</div></div>
       <button class="quick ${st !== "none" ? "on" : ""}" data-action="quick" data-pid="${c.i}" aria-label="${st !== "none" ? "Owned — tap to clear" : "Mark owned"}"><i>${st !== "none" ? I.check : I.plus}</i></button></div>`;
   }
   function patchOwned() { for (const b of root.querySelectorAll(".quick")) { const st = ownState(state.owned, state.flatPrices, b.dataset.pid); b.classList.toggle("on", st !== "none"); $("i", b).innerHTML = st !== "none" ? I.check : I.plus; } }

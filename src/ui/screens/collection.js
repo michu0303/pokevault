@@ -1,6 +1,6 @@
 // Collection: owned products by value, Cards / Sealed, sort + filters, "show more".
 import { I } from "../icons.js";
-import { esc, money, delegate, imgTag, imgUrl, relTime, $ } from "../dom.js";
+import { esc, money, delegate, imgTag, imgUrl, relTime, displayName, $ } from "../dom.js";
 import { ownedTotal, productValue, totalWorth } from "../../collection.js";
 import { applyFilters, applySort, activeCount, sortHtml, filtersHtml, filterActions, raritiesOf, setsOf, SORTS } from "../filters.js";
 import { mountSheet } from "../sheet.js";
@@ -28,7 +28,7 @@ export function mount(root, ctx) {
     el.innerHTML = list.slice(0, f.shown).map((c) => {
       const o = state.owned[String(c.i)] || {}, qty = ownedTotal(state.owned, c.i);
       const printings = Object.keys(o).map((v) => v + (o[v] > 1 ? " ×" + o[v] : "")).join(", ");
-      return `<div class="card crow"><div class="tap" data-action="card" data-pid="${c.i}"><div class="thumb">${imgTag(imgUrl(c), c.n)}</div><div class="info"><div class="nm">${esc(c.n)}</div><div class="meta">${esc(c.s)}${c.nu ? " · " + esc(c.nu) : ""}${c.cat === CAT_JP ? " · JP" : ""} · ${esc(printings)}</div></div></div><div class="val"><b class="num">${money(productValue(state.owned, state.flatPrices, c.i))}</b><span class="num">${qty} owned</span></div></div>`;
+      return `<div class="card crow"><div class="tap" data-action="card" data-pid="${c.i}"><div class="thumb">${imgTag(imgUrl(c), c.n)}</div><div class="info"><div class="nm">${esc(displayName(c))}</div><div class="meta">${esc(c.s)}${c.nu ? " · " + esc(c.nu) : ""}${c.cat === CAT_JP ? " · JP" : ""} · ${esc(printings)}</div></div></div><div class="val"><b class="num">${money(productValue(state.owned, state.flatPrices, c.i))}</b><span class="num">${qty} owned</span></div></div>`;
     }).join("") + (list.length > f.shown ? `<button class="btn ghost" data-action="more">Show more · ${list.length - f.shown} left</button>` : "");
   }
   function openSheet(name) {

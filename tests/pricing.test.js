@@ -37,6 +37,7 @@ test("variantsFor / primaryVariant / priceOf", () => {
   const flat = { 7: { "Reverse Holofoil": 2, Normal: 1, "Master Ball": 9 } };
   assert.deepEqual(variantsFor(flat, 7), ["Normal", "Reverse Holofoil", "Master Ball"]);
   assert.deepEqual(variantsFor(flat, 8), ["Default"], "unknown product → Default");
+  assert.deepEqual(variantsFor(flat, 8, { 8: { "Reverse Holofoil": 1, Normal: 2 } }), ["Normal", "Reverse Holofoil"], "no prices yet → the printings you own");
   assert.equal(primaryVariant(flat, 7), "Normal");
   assert.equal(primaryVariant({ 1: { "Reverse Holofoil": 3 } }, 1), "Reverse Holofoil");
   assert.equal(priceOf(flat, 7, "Master Ball"), 9);

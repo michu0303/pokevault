@@ -1,7 +1,10 @@
 export const $ = (s, r = document) => r.querySelector(s);
 export const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-import { esc, money } from "../util.js";
+import { esc, money, cleanName } from "../util.js";
+import { patternOf } from "../catalog.js";
 export { esc, money };
+/** "Pikachu ex - 238/191" → "Pikachu ex"; pattern products keep their pattern: "Exeggcute · Poké Ball" */
+export function displayName(c) { const n = cleanName(c && c.n) || (c && c.n) || ""; const p = patternOf(c && c.n); return p ? n + " · " + p : n; }
 export function haptic(ms = 8) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
 let toastTimer = null;
 export function toast(msg) {
@@ -41,6 +44,20 @@ export function setAbbr(name) {
   const words = n.split(/\s+/).filter((w) => w && !/^(the|of|and|&)$/i.test(w));
   if (words.length >= 2) return words.slice(0, 3).map((w) => w[0]).join("").toUpperCase();
   return n.slice(0, 3).toUpperCase();
+}
+/** fanned stack of up to three card images */
+export function artFan(cards) {
+  const cs = (cards || []).filter((c) => c && c.g).slice(0, 3);
+  if (!cs.length) return `<div class="fan n1"><div class="fempty"></div></div>`;
+  return `<div class="fan n${cs.length}">${cs.map((c) => `<div class="fimg">${imgTag(imgUrl(c), c.n)}</div>`).join("")}</div>`;
+}
+/** representative cards for a set: chase rarities first, then the first cards */
+export function setSampleCards(g, n = 3) {
+  if (!g) return [];
+  const rank = (r) => /special illustration/i.test(r) ? 0 : /illustration rare/i.test(r) ? 1 : /hyper|secret|ultra/i.test(r) ? 2 : 9;
+  const seen = new Set(), out = [];
+  for (const c of g.cards.slice().sort((a, b) => rank(a.r) - rank(b.r))) { if (seen.has(c.nu)) continue; seen.add(c.nu); out.push(c); if (out.length === n) break; }
+  return out;
 }
 export function relTime(ts) {
   if (!ts) return "";
