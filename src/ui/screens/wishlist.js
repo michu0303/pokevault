@@ -4,6 +4,7 @@ import { esc, money, delegate, imgTag, imgUrl, haptic, $ } from "../dom.js";
 import { toggleWish, unsortedWishlist, findFolder, folderCount, addFolder, renameFolder, deleteFolder } from "../../collection.js";
 import { applyFilters, applySort, activeCount, sortHtml, filtersHtml, filterActions, raritiesOf, setsOf, SORTS, cardValue } from "../filters.js";
 import { mountSheet } from "../sheet.js";
+import { askText, askConfirm } from "../dialog.js";
 import { CAT_JP } from "../../constants.js";
 
 export function mount(root, ctx) {
@@ -38,8 +39,8 @@ export function mount(root, ctx) {
     if (!name) return;
     if (name === "menu") {
       sheet = mountSheet($("#sheets2"), ctx, { title: (folder() || {}).name || "Folder", html: `<div class="stack"><button class="btn ghost" data-action="rename">Rename folder</button><button class="btn danger" data-action="delete">Delete folder</button></div>`, actions: {
-        rename: () => { const nm = prompt("Rename folder", folder().name); if (nm && nm.trim()) store.update((s) => renameFolder(s, fid, nm), "wishFolders"); ctx.back(); },
-        delete: () => { if (confirm("Delete this folder? The cards stay on your wishlist.")) { store.update((s) => deleteFolder(s, fid), "wishFolders"); history.go(-2); } },
+        rename: async () => { const nm = await askText({ title: "Rename folder", value: folder().name, ok: "Rename" }); if (nm) store.update((s) => renameFolder(s, fid, nm), "wishFolders"); ctx.back(); },
+        delete: async () => { if (await askConfirm({ title: "Delete this folder?", message: "The cards stay on your wishlist.", ok: "Delete folder", danger: true })) { store.update((s) => deleteFolder(s, fid), "wishFolders"); history.go(-2); } },
       } });
       return;
     }
@@ -54,7 +55,7 @@ export function mount(root, ctx) {
   const off = delegate(root, {
     back: () => ctx.back(),
     open: (el) => ctx.go("/wishlist/" + el.dataset.fid),
-    new: () => { const nm = prompt("New folder name"); if (nm && nm.trim()) store.update((s) => addFolder(s, nm), "wishFolders"); },
+    new: async () => { const nm = await askText({ title: "New folder", placeholder: "Folder name", ok: "Create" }); if (nm) store.update((s) => addFolder(s, nm), "wishFolders"); },
     card: (el) => ctx.openCard(el.dataset.pid),
     unwish: (el) => { haptic(); store.update((s) => toggleWish(s, el.dataset.pid), "wishlist", "wishFolders"); ctx.toast("Removed from wishlist"); },
     menu: () => ctx.router.setQuery({ sheet: "menu" }, { replace: false }),

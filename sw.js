@@ -4,14 +4,14 @@
 //  - card images (cdn.tcgtracking.com): stale-while-revalidate, so anything
 //    you've viewed loads offline and "Download images" can pre-warm a set
 //  - API calls: network only (prices must be fresh; the catalog lives in IndexedDB)
-const VERSION = "2026-09-13.1";
+const VERSION = "2026-09-13.2";
 const SHELL = "pv-shell-" + VERSION, IMAGES = "pv-images-v1", FONTS = "pv-fonts-v1";
 const SHELL_FILES = [
   "./app.html", "./manifest.webmanifest", "./styles/tokens.css", "./styles/app.css",
   "./icons/icon.svg", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/maskable-512.png", "./icons/apple-touch-icon.png",
   "./src/main.js", "./src/app.js", "./src/api.js", "./src/catalog.js", "./src/collection.js", "./src/constants.js", "./src/crypto.js",
   "./src/history.js", "./src/pricing.js", "./src/search.js", "./src/storage.js", "./src/store.js", "./src/sync.js", "./src/util.js",
-  "./src/ui/dom.js", "./src/ui/filters.js", "./src/ui/icons.js", "./src/ui/index.js", "./src/ui/router.js", "./src/ui/sheet.js", "./src/ui/shell.js",
+  "./src/ui/dialog.js", "./src/ui/dom.js", "./src/ui/filters.js", "./src/ui/icons.js", "./src/ui/index.js", "./src/ui/router.js", "./src/ui/sheet.js", "./src/ui/shell.js",
   "./src/ui/screens/cardSheet.js", "./src/ui/screens/collection.js", "./src/ui/screens/home.js", "./src/ui/screens/search.js",
   "./src/ui/screens/setDetail.js", "./src/ui/screens/sets.js", "./src/ui/screens/settings.js", "./src/ui/screens/wishlist.js",
 ];

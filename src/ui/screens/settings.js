@@ -5,6 +5,7 @@ import { exportPayload, parseImport } from "../../collection.js";
 import { passFingerprint } from "../../crypto.js";
 import { syncConfigured } from "../../sync.js";
 import { today } from "../../util.js";
+import { askConfirm } from "../dialog.js";
 
 export function mount(root, ctx) {
   const { state, store, app } = ctx;
@@ -54,7 +55,7 @@ notify pgrst, 'reload schema';</pre></details>`;
   async function importFile(f) {
     try {
       const d = parseImport(await f.text());
-      if (!confirm("Import this backup? It replaces your collection, wishlist, folders and tracked sets on this device.")) return;
+      if (!(await askConfirm({ title: "Import this backup?", message: "It replaces your collection, wishlist, folders and tracked sets on this device.", ok: "Import", danger: true }))) return;
       store.update((s) => { s.owned = d.owned; s.wishlist = d.wishlist; s.tracked = d.tracked; s.favorites = d.favorites; s.wishFolders = d.wishFolders; if (d.history) s.history = d.history; }, "owned", "wishlist", "tracked", "favorites", "wishFolders", "history");
       ctx.toast("Backup imported");
     } catch (e) { ctx.toast("Couldn’t read that file — is it a PokéVault backup?"); }
@@ -62,13 +63,13 @@ notify pgrst, 'reload schema';</pre></details>`;
   const off = delegate(root, {
     back: () => ctx.back(),
     theme: (el) => store.update((s) => { s.prefs.theme = el.dataset.theme; }, "prefs"),
-    build: () => { if (state.catalogMeta && !confirm("Rebuild the card database? This re-downloads the full catalog.")) return; app.buildCatalog().then((n) => ctx.toast("Card database ready — " + n.toLocaleString() + " products")).catch((e) => ctx.toast(e.message)); },
+    build: async () => { if (state.catalogMeta && !(await askConfirm({ title: "Rebuild the card database?", message: "This re-downloads the full catalog.", ok: "Rebuild" }))) return; app.buildCatalog().then((n) => ctx.toast("Card database ready — " + n.toLocaleString() + " products")).catch((e) => ctx.toast(e.message)); },
     refresh: async () => { refreshing = { done: 0, total: 0 }; paint(); const r = await app.refreshValues((p) => { refreshing = p; paint(); }); refreshing = null; paint(); ctx.toast(r.failed ? `Values updated (${r.failed} set${r.failed === 1 ? "" : "s"} failed)` : r.done ? "Values updated" : "Nothing to refresh"); },
     warm: async () => { warming = { done: 0, total: 0 }; paint(); let last = 0; const r = await app.warmImages((p) => { if (Date.now() - last > 250) { last = Date.now(); warming = p; paint(); } }); warming = null; paint(); ctx.toast(r.total ? `${r.done - r.failed} images ready offline${r.failed ? ` · ${r.failed} failed` : ""}` : "Nothing to download yet — track a set or add cards first"); },
     export: () => { const blob = new Blob([JSON.stringify(exportPayload(state, state.history), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "pokevault-backup-" + today() + ".json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); ctx.toast("Backup file downloaded"); },
     import: () => $("[data-region=file]", root).click(),
-    "clear-col": () => { if (confirm("Remove every owned card from this device?")) store.update((s) => { s.owned = {}; }, "owned"); },
-    "clear-wl": () => { if (confirm("Clear the wishlist and its folders?")) store.update((s) => { s.wishlist = {}; s.wishFolders = []; }, "wishlist", "wishFolders"); },
+    "clear-col": async () => { if (await askConfirm({ title: "Clear collection?", message: "Removes every owned card from this device.", ok: "Clear collection", danger: true })) store.update((s) => { s.owned = {}; }, "owned"); },
+    "clear-wl": async () => { if (await askConfirm({ title: "Clear wishlist?", message: "Removes every wishlisted card and all folders.", ok: "Clear wishlist", danger: true })) store.update((s) => { s.wishlist = {}; s.wishFolders = []; }, "wishlist", "wishFolders"); },
     "sync-on": async () => {
       const v = (f) => ($(`input[data-f=${f}]`, root).value || "").trim();
       const cfg = { url: v("url"), key: v("key"), pass: v("pass") };
@@ -78,14 +79,14 @@ notify pgrst, 'reload schema';</pre></details>`;
         const { remote } = await app.connectSync(cfg);
         const haveLocal = Object.keys(state.owned).length > 0 || Object.keys(state.wishlist).length > 0;
         let useRemote = !!remote;
-        if (remote && haveLocal) useRemote = confirm("This vault already has a saved collection.\n\nOK — load the cloud collection onto this device (replaces what's here).\nCancel — upload THIS device's collection to the vault instead.");
+        if (remote && haveLocal) { const r = await askConfirm({ title: "This vault already has a collection", message: "Which one should win?", ok: "Use the cloud copy (replaces this device)", alt: "Upload this device's collection", cancel: "Cancel" }); if (r === false) { app.disconnectSync(); paint(); return; } useRemote = r === true; }
         if (!remote) ctx.toast("New vault created for this passphrase");
         await app.finishConnect(useRemote, remote); ctx.toast("Cloud sync connected");
       } catch (e) { ctx.toast(e.message || "Couldn’t connect"); }
       await loadFp(); paint();
     },
     "sync-now": () => app.pushNow().then(() => ctx.toast(state.syncStatus === "ok" ? "Synced" : state.syncError || "Sync failed")),
-    "sync-off": () => { if (confirm("Stop syncing on this device? Your collection stays here and the cloud copy is untouched.")) { app.disconnectSync(); paint(); } },
+    "sync-off": async () => { if (await askConfirm({ title: "Stop syncing on this device?", message: "Your collection stays here and the cloud copy is untouched.", ok: "Disconnect", danger: true })) { app.disconnectSync(); paint(); } },
   });
   async function loadFp() { try { fp = syncConfigured(state.sync) ? await passFingerprint(state.sync.pass) : ""; } catch (e) { fp = ""; } }
   loadFp().then(paint);

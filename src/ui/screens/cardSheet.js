@@ -7,6 +7,7 @@ import { variantsFor, priceOf, primaryVariant } from "../../pricing.js";
 import { productSeries } from "../../history.js";
 import { CAT_JP } from "../../constants.js";
 import { mountSheet } from "../sheet.js";
+import { askText } from "../dialog.js";
 import { toggleCardFolder, addFolder, folderCount } from "../../collection.js";
 
 export function mountCardSheet(host, ctx, pid) {
@@ -63,7 +64,7 @@ export function mountCardSheet(host, ctx, pid) {
     if (!on || !c) return;
     picker = mountSheet($("#sheets2"), ctx, { title: "Wishlist folders", html: pickerHtml(), actions: {
       tf: (el) => { haptic(); store.update((s) => toggleCardFolder(s, c.i, el.dataset.fid), "wishFolders", "wishlist"); picker.repaint(pickerHtml()); },
-      nf: () => { const nm = prompt("New folder name"); if (nm && nm.trim()) store.update((s) => { const f = addFolder(s, nm); if (f) toggleCardFolder(s, c.i, f.id); }, "wishFolders", "wishlist"); picker.repaint(pickerHtml()); },
+      nf: async () => { const nm = await askText({ title: "New folder", placeholder: "Folder name", ok: "Create" }); if (nm) store.update((s) => { const f = addFolder(s, nm); if (f) toggleCardFolder(s, c.i, f.id); }, "wishFolders", "wishlist"); if (picker) picker.repaint(pickerHtml()); },
     } });
   }
   paint();
