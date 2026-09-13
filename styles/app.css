@@ -221,3 +221,5 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .iconbtn{position:relative}
 #dialog .dim{z-index:70}#dialog .sheet{z-index:71}
 .sheet.dialog .body{gap:14px}
+/* secondary sheets (filters, folder picker) stack above the card sheet */
+#sheets2 .dim{z-index:50}#sheets2 .sheet{z-index:51}
