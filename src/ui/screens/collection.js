@@ -10,7 +10,7 @@ export function mount(root, ctx) {
   const { state, store } = ctx;
   const f = state.ui.col;
   let seg = "cards", sheet = null, setQ = "";
-  root.innerHTML = `<div class="topbar"><h1>Collection</h1></div><div class="seg" data-region="seg"></div><div class="card summary" data-region="sum"></div><div class="sec" data-region="head"></div><div class="stack group" data-region="list"></div>`;
+  root.innerHTML = `<div class="topbar"><h1>Collection</h1></div><div class="seg" data-region="seg"></div><div class="card summary" data-region="sum"></div><div class="sticky"><div class="sec" data-region="head"></div></div><div class="stack group" data-region="list"></div>`;
   const ownedList = () => Object.keys(state.owned).map((pid) => state.byId.get(pid)).filter(Boolean);
   function paint() {
     const all = ownedList(), cards = all.filter((c) => !c.sealed), sealed = all.filter((c) => c.sealed);

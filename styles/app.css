@@ -302,3 +302,11 @@ html{scrollbar-gutter:stable}
 /* cards/sealed switch sits above the filters, not inside the progress card */
 .secseg{margin-bottom:-4px}
 .pricebox .chart{width:100%;height:110px;margin:0}
+/* ---- sticky headers: search fields, filter rows, list heads ---- */
+.sticky{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);margin:0 calc(-1 * var(--margin));padding:4px var(--margin) 8px;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s}
+.sticky.stuck{box-shadow:0 10px 16px -12px rgba(20,32,29,.35)}
+.sticky.below{top:calc(env(safe-area-inset-top,0px) + 64px)}
+.topbar.sticky{flex-direction:row;align-items:center;padding-top:6px;padding-bottom:6px;gap:10px}
+.topbar.sticky.tight{gap:2px}
+.sticky > .sec{min-height:44px}
+.filtrow.sticky{flex-direction:row;align-items:center;gap:8px}

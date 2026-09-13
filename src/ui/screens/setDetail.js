@@ -21,10 +21,10 @@ export function mount(root, ctx) {
   const vf = (pid) => variantsFor(state.flatPrices, pid, state.owned);
 
   root.innerHTML = `
-    <div class="topbar tight"><button class="iconbtn back" data-action="back" aria-label="Back">${I.back}</button><h1 class="sm">${esc(g.name)}</h1><button class="iconbtn star" data-action="star" aria-label="Track set"></button></div>
+    <div class="topbar tight sticky"><button class="iconbtn back" data-action="back" aria-label="Back">${I.back}</button><h1 class="sm">${esc(g.name)}</h1><button class="iconbtn star" data-action="star" aria-label="Track set"></button></div>
     <div class="card prog" data-region="prog"></div>
     ${g.sealed.length ? `<div class="seg secseg" data-region="secseg"></div>` : ""}
-    <div class="filtrow" data-region="filters"></div>
+    <div class="filtrow sticky below" data-region="filters"></div>
     <div data-region="body"></div>`;
 
   function groups() {

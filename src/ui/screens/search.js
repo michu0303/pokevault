@@ -15,9 +15,9 @@ export function mount(root, ctx) {
   let results = [], timer = null, sheet = null, setQ = "";
   root.innerHTML = `
     <div class="topbar"><h1>Search</h1></div>
-    <label class="search">${I.search}<input type="search" placeholder="Card name, set or number…" autocomplete="off" autocorrect="off" spellcheck="false" value="${esc(f.term)}"><button class="clear ${f.term ? "" : "hidden"}" data-action="clear">Clear</button></label>
+    <div class="sticky"><label class="search">${I.search}<input type="search" placeholder="Card name, set or number…" autocomplete="off" autocorrect="off" spellcheck="false" value="${esc(f.term)}"><button class="clear ${f.term ? "" : "hidden"}" data-action="clear">Clear</button></label>
+    <div class="sec" data-region="head"></div></div>
     <div data-region="recent"></div>
-    <div class="sec" data-region="head"></div>
     <div data-region="results"></div>`;
   const input = $("input", root);
   const run = () => { results = f.term.trim() ? searchCatalog(state.catalog, f.term) : []; paint(); };
