@@ -4,52 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>PokéVault (rebuild)</title>
-<style>
-  :root{--bg:#edf0e8;--surface:#fbfcf8;--border:#d5ddd6;--ink:#2c4540;--sec:#5f706c;--strong:#4e7a72;--bar:#8aa67a;color-scheme:light}
-  @media(prefers-color-scheme:dark){:root{--bg:#15201d;--surface:#1d2a26;--border:#2c3b36;--ink:#e6ece8;--sec:#97a8a2;--strong:#7fb3aa;color-scheme:dark}}
-  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:20px 15px}
-  h1{font-size:22px;font-weight:800;letter-spacing:-.3px;margin:0 0 4px}p.sub{color:var(--sec);margin:0 0 16px;font-size:13px}
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px}
-  .row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-top:1px solid var(--border);font-size:14px}.row:first-child{border-top:0}
-  .row b{font-variant-numeric:tabular-nums}.k{color:var(--sec)}
-  button{height:48px;border-radius:10px;border:0;background:var(--strong);color:#fff;font:800 15px Inter,sans-serif;padding:0 18px;width:100%;margin-top:8px}
-  button:disabled{opacity:.5}.bar{height:6px;background:var(--border);border-radius:6px;overflow:hidden;margin-top:10px}.bar>div{height:100%;background:var(--bar);width:0}
-  .ok{color:var(--strong);font-weight:700}.err{color:#b4485a;font-weight:700}
-</style>
+<meta name="theme-color" content="#edf0e8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>PokéVault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/app.css">
 </head>
 <body>
-<h1>PokéVault</h1>
-<p class="sub">Rebuild foundation — this page only proves the modules boot on this device. The real UI comes next.</p>
-<div class="card" id="status"></div>
-<div class="card"><div id="build"></div><button id="btnBuild">Download card database</button></div>
+<main id="screen"></main>
+<nav id="nav" class="nav" aria-label="Main"></nav>
+<div id="sheets"></div>
+<div id="toast"></div>
 <script type="module">
 import { createApp } from "./src/main.js";
+import { mountUI } from "./src/ui/index.js";
 const app = createApp();
-const $ = (s) => document.querySelector(s);
-const row = (k, v, cls = "") => `<div class="row"><span class="k">${k}</span><b class="${cls}">${v}</b></div>`;
-function render(s) {
-  const worth = s.catalog.length ? Object.keys(s.owned).reduce((a, pid) => a + Object.entries(s.owned[pid]).reduce((x, [v, q]) => x + q * ((s.flatPrices[pid] || {})[v] || 0), 0), 0) : 0;
-  $("#status").innerHTML =
-    row("Catalog", s.catalog.length ? s.catalog.length.toLocaleString() + " products · " + s.bySet.size + " sets" : "not built", s.catalog.length ? "ok" : "err") +
-    row("Catalog built", s.catalogMeta && s.catalogMeta.builtAt ? new Date(s.catalogMeta.builtAt).toLocaleString() + (s.catalogMeta.source ? " · " + s.catalogMeta.source : "") : "—") +
-    row("Owned products", Object.keys(s.owned).length) + row("Wishlist", Object.keys(s.wishlist).length + " · " + s.wishFolders.length + " folders") +
-    row("Tracked sets", Object.keys(s.tracked).length) + row("Cached prices", Object.keys(s.flatPrices).length) +
-    row("Collection worth (cached prices)", "$" + worth.toFixed(2)) + row("History days", s.history.length) +
-    row("Cloud sync", s.sync.url ? (s.syncStatus || "configured") + (s.syncError ? " · " + s.syncError : "") : "off", s.syncStatus === "error" ? "err" : s.syncStatus === "ok" ? "ok" : "") +
-    row("Unsynced changes", s.dirty ? "yes" : "no");
-  const b = s.build;
-  $("#build").innerHTML = s.building
-    ? (b.source === "api" ? `Crawling the API: ${b.done} of ${b.total} sets · ${b.products.toLocaleString()} products` : "Downloading the pre-built catalog…") + `<div class="bar"><div style="width:${b.total ? (b.done / b.total * 100) : 30}%"></div></div>`
-    : (s.catalog.length ? "Catalog is ready on this device." : "First run on this device: download the catalog once.");
-  $("#btnBuild").disabled = s.building;
-  $("#btnBuild").textContent = s.catalog.length ? "Rebuild card database" : "Download card database";
-}
-app.store.subscribe(render);
-render(app.state);
-$("#btnBuild").onclick = () => app.buildCatalog().then((n) => console.log("catalog", n)).catch((e) => { alert(e.message); render(app.state); });
-app.boot().then(() => render(app.state));
 window.pv = app;
+mountUI(app);
+app.boot();
 </script>
 </body>
 </html>

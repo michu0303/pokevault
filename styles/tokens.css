@@ -1,0 +1,26 @@
+/* PokéVault design tokens — direction C "Bulbasaur dusk".
+   Source of truth: the Tokens page of the design canvas. Light is the default;
+   dark applies with the system preference or an explicit data-theme. */
+:root {
+  --bg: #edf0e8; --surface: #fbfcf8; --border: #d5ddd6; --soft: #e2e8df; --imgbg: #e6ebe2; --chip: #fbfcf8;
+  --ink: #2c4540; --text: #3a504c; --sec: #5f706c; --faint: #9aaaa5; --nav-idle: #7f8f8a;
+  --strong: #4e7a72; --on-strong: #ffffff; --bar: #8aa67a; --pos-text: #5e7a55;
+  --check: #6f9a63; --check-text: #5e7a55; --has-bg: #e9f2ec; --has-border: #bcd6c4;
+  --gold: #c89a3e; --neg: #b4485a; --stage: #1c1c21; --glow: rgba(78,122,114,.35);
+  --spark: #4e7a72; --spark-fill: rgba(78,122,114,.12); --quick-bg: rgba(255,255,255,.92);
+  --shadow: 0 1px 3px rgba(44,69,64,.08);
+  --r-ctl: 8px; --r-tile: 10px; --r-card: 12px; --r-hero: 16px;
+  --margin: 15px; --nav-h: 72px;
+  color-scheme: light;
+}
+:root[data-theme="dark"] { color-scheme: dark; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark; } }
+:root[data-theme="dark"], :root:not([data-theme="light"]).sys-dark {
+  --bg: #15201d; --surface: #1d2a26; --border: #2c3b36; --soft: #26332f; --imgbg: #26332f; --chip: #1d2a26;
+  --ink: #e6ece8; --text: #cdd6d1; --sec: #97a8a2; --faint: #5c6d67; --nav-idle: #7f908b;
+  --strong: #7fb3aa; --on-strong: #0f1a17; --bar: #8aa67a; --pos-text: #a3c491;
+  --check: #7fae72; --check-text: #a3c491; --has-bg: #22342c; --has-border: #3a5446;
+  --gold: #d4a94e; --neg: #e08a95; --stage: #0b1210; --glow: rgba(127,179,170,.28);
+  --spark: #7fb3aa; --spark-fill: rgba(127,179,170,.14); --quick-bg: rgba(29,42,38,.92);
+  --shadow: 0 1px 3px rgba(0,0,0,.3);
+}
