@@ -59,6 +59,8 @@ Validated as a real need: app was used at a card show with poor signal. Catalog 
 
 ## Completed
 
+- [x] **Rebuild phase 1 — foundation** (branch `rebuild`): pure logic extracted into `src/*.js`, 45 tests on real API fixtures (`npm test`), static catalog build script + daily GitHub Action, `app.html` boot page. Design direction C (Bulbasaur dusk, light + dark) chosen and mocked for every screen.
+
 - [x] **Include wishlist folders in JSON export/import** — commit `62ce869`.
 - [x] **Stop destroying text inputs mid-typing on Search and Picker** — commit `2fe3541`.
 - [x] **Faster search filter (cached lowercased fields) + no-cache meta tags for instant deploys** — commit `0a7137d`.

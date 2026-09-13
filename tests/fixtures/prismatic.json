@@ -1,0 +1,347 @@
+{
+ "set": {
+  "id": 23821,
+  "name": "SV: Prismatic Evolutions",
+  "cat": 3,
+  "published_on": "2025-01-17"
+ },
+ "products": [
+  {
+   "id": 610356,
+   "name": "Exeggcute",
+   "clean_name": "Exeggcute",
+   "number": "001/131",
+   "rarity": "Common",
+   "image_url": "https://cdn.tcgtracking.com/product/610356_200w.jpg"
+  },
+  {
+   "id": 610637,
+   "name": "Exeggcute (Master Ball Pattern)",
+   "clean_name": "Exeggcute (Master Ball Pattern)",
+   "number": "001/131",
+   "rarity": "Common",
+   "image_url": "https://cdn.tcgtracking.com/product/610637_200w.jpg"
+  },
+  {
+   "id": 610536,
+   "name": "Exeggcute (Poke Ball Pattern)",
+   "clean_name": "Exeggcute (Poke Ball Pattern)",
+   "number": "001/131",
+   "rarity": "Common",
+   "image_url": "https://cdn.tcgtracking.com/product/610536_200w.jpg"
+  },
+  {
+   "id": 610357,
+   "name": "Exeggutor",
+   "clean_name": "Exeggutor",
+   "number": "002/131",
+   "rarity": "Uncommon",
+   "image_url": "https://cdn.tcgtracking.com/product/610357_200w.jpg"
+  },
+  {
+   "id": 610638,
+   "name": "Exeggutor (Master Ball Pattern)",
+   "clean_name": "Exeggutor (Master Ball Pattern)",
+   "number": "002/131",
+   "rarity": "Uncommon",
+   "image_url": "https://cdn.tcgtracking.com/product/610638_200w.jpg"
+  },
+  {
+   "id": 610537,
+   "name": "Exeggutor (Poke Ball Pattern)",
+   "clean_name": "Exeggutor (Poke Ball Pattern)",
+   "number": "002/131",
+   "rarity": "Uncommon",
+   "image_url": "https://cdn.tcgtracking.com/product/610537_200w.jpg"
+  },
+  {
+   "id": 610358,
+   "name": "Pinsir",
+   "clean_name": "Pinsir",
+   "number": "003/131",
+   "rarity": "Common",
+   "image_url": "https://cdn.tcgtracking.com/product/610358_200w.jpg"
+  },
+  {
+   "id": 610639,
+   "name": "Pinsir (Master Ball Pattern)",
+   "clean_name": "Pinsir (Master Ball Pattern)",
+   "number": "003/131",
+   "rarity": "Common",
+   "image_url": "https://cdn.tcgtracking.com/product/610639_200w.jpg"
+  },
+  {
+   "id": 610538,
+   "name": "Pinsir (Poke Ball Pattern)",
+   "clean_name": "Pinsir (Poke Ball Pattern)",
+   "number": "003/131",
+   "rarity": "Common",
+   "image_url": "https://cdn.tcgtracking.com/product/610538_200w.jpg"
+  },
+  {
+   "id": 610359,
+   "name": "Budew",
+   "clean_name": "Budew",
+   "number": "004/131",
+   "rarity": "Common",
+   "image_url": "https://cdn.tcgtracking.com/product/610359_200w.jpg"
+  },
+  {
+   "id": 610640,
+   "name": "Budew (Master Ball Pattern)",
+   "clean_name": "Budew (Master Ball Pattern)",
+   "number": "004/131",
+   "rarity": "Common",
+   "image_url": "https://cdn.tcgtracking.com/product/610640_200w.jpg"
+  },
+  {
+   "id": 610539,
+   "name": "Budew (Poke Ball Pattern)",
+   "clean_name": "Budew (Poke Ball Pattern)",
+   "number": "004/131",
+   "rarity": "Common",
+   "image_url": "https://cdn.tcgtracking.com/product/610539_200w.jpg"
+  },
+  {
+   "id": 610360,
+   "name": "Leafeon",
+   "clean_name": "Leafeon",
+   "number": "005/131",
+   "rarity": "Rare",
+   "image_url": "https://cdn.tcgtracking.com/product/610360_200w.jpg"
+  },
+  {
+   "id": 610641,
+   "name": "Leafeon (Master Ball Pattern)",
+   "clean_name": "Leafeon (Master Ball Pattern)",
+   "number": "005/131",
+   "rarity": "Rare",
+   "image_url": "https://cdn.tcgtracking.com/product/610641_200w.jpg"
+  },
+  {
+   "id": 610540,
+   "name": "Leafeon (Poke Ball Pattern)",
+   "clean_name": "Leafeon (Poke Ball Pattern)",
+   "number": "005/131",
+   "rarity": "Rare",
+   "image_url": "https://cdn.tcgtracking.com/product/610540_200w.jpg"
+  },
+  {
+   "id": 610361,
+   "name": "Leafeon ex - 006/131",
+   "clean_name": "Leafeon ex - 006/131",
+   "number": "006/131",
+   "rarity": "Double Rare",
+   "image_url": "https://cdn.tcgtracking.com/product/610361_200w.jpg"
+  },
+  {
+   "id": 635011,
+   "name": "Prismatic Evolution Booster Bundle Display Case",
+   "clean_name": "Prismatic Evolution Booster Bundle Display Case",
+   "number": null,
+   "rarity": null,
+   "image_url": "https://cdn.tcgtracking.com/product/635011_200w.jpg"
+  },
+  {
+   "id": 598488,
+   "name": "Prismatic Evolutions  Binder Collection Case",
+   "clean_name": "Prismatic Evolutions  Binder Collection Case",
+   "number": null,
+   "rarity": null,
+   "image_url": "https://cdn.tcgtracking.com/product/598488_200w.jpg"
+  },
+  {
+   "id": 609716,
+   "name": "Prismatic Evolutions 2-Pack Blister [Eevee]",
+   "clean_name": "Prismatic Evolutions 2-Pack Blister [Eevee]",
+   "number": null,
+   "rarity": null,
+   "image_url": "https://cdn.tcgtracking.com/product/609716_200w.jpg"
+  },
+  {
+   "id": 620024,
+   "name": "Prismatic Evolutions 2-Pack Blister Case",
+   "clean_name": "Prismatic Evolutions 2-Pack Blister Case",
+   "number": null,
+   "rarity": null,
+   "image_url": "https://cdn.tcgtracking.com/product/620024_200w.jpg"
+  }
+ ],
+ "prices": {
+  "598488": {
+   "tcg": {
+    "Normal": {
+     "low": 530,
+     "market": 530
+    }
+   }
+  },
+  "609716": {
+   "tcg": {
+    "Normal": {
+     "low": 30,
+     "market": 36.65
+    }
+   }
+  },
+  "610356": {
+   "tcg": {
+    "Normal": {
+     "low": 0.01,
+     "market": 0.04
+    },
+    "Reverse Holofoil": {
+     "low": 0.01,
+     "market": 0.16
+    }
+   }
+  },
+  "610357": {
+   "tcg": {
+    "Normal": {
+     "low": 0.01,
+     "market": 0.04
+    },
+    "Reverse Holofoil": {
+     "low": 0.05,
+     "market": 0.25
+    }
+   }
+  },
+  "610358": {
+   "tcg": {
+    "Normal": {
+     "low": 0.01,
+     "market": 0.05
+    },
+    "Reverse Holofoil": {
+     "low": 0.01,
+     "market": 0.1
+    }
+   }
+  },
+  "610359": {
+   "tcg": {
+    "Normal": {
+     "low": 0.09,
+     "market": 0.21
+    },
+    "Reverse Holofoil": {
+     "low": 0.02,
+     "market": 0.26
+    }
+   }
+  },
+  "610360": {
+   "tcg": {
+    "Holofoil": {
+     "low": 0.18,
+     "market": 0.32
+    },
+    "Reverse Holofoil": {
+     "low": 0.05,
+     "market": 0.43
+    }
+   }
+  },
+  "610361": {
+   "tcg": {
+    "Holofoil": {
+     "low": 3.1,
+     "market": 4.58
+    }
+   }
+  },
+  "610536": {
+   "tcg": {
+    "Holofoil": {
+     "low": 0.15,
+     "market": 0.31
+    }
+   }
+  },
+  "610537": {
+   "tcg": {
+    "Holofoil": {
+     "low": 0.05,
+     "market": 0.37
+    }
+   }
+  },
+  "610538": {
+   "tcg": {
+    "Holofoil": {
+     "low": 0.16,
+     "market": 0.36
+    }
+   }
+  },
+  "610539": {
+   "tcg": {
+    "Holofoil": {
+     "low": 0.2,
+     "market": 0.64
+    }
+   }
+  },
+  "610540": {
+   "tcg": {
+    "Holofoil": {
+     "low": 0.9,
+     "market": 1.99
+    }
+   }
+  },
+  "610637": {
+   "tcg": {
+    "Holofoil": {
+     "low": 0.65,
+     "market": 1.21
+    }
+   }
+  },
+  "610638": {
+   "tcg": {
+    "Holofoil": {
+     "low": 9,
+     "market": 10.47
+    }
+   }
+  },
+  "610639": {
+   "tcg": {
+    "Holofoil": {
+     "low": 1,
+     "market": 1.32
+    }
+   }
+  },
+  "610640": {
+   "tcg": {
+    "Holofoil": {
+     "low": 2.3,
+     "market": 3.19
+    }
+   }
+  },
+  "610641": {
+   "tcg": {
+    "Holofoil": {
+     "low": 27,
+     "market": 30.76
+    }
+   }
+  },
+  "620024": {
+   "tcg": {
+    "Normal": {
+     "low": 723,
+     "market": 830.79
+    }
+   }
+  },
+  "635011": {
+   "tcg": []
+  }
+ }
+}

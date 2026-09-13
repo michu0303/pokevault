@@ -2,6 +2,47 @@
 
 Context for continuing development of PokéVault.
 
+## Status: rebuild in progress (branch `rebuild`)
+
+The app is being rebuilt from the single-file `PokeVault.html` into a small modular codebase — still **no framework and no bundler**: native ES modules served as static files, Node's built-in test runner, and a GitHub Action that pre-builds the catalog. `PokeVault.html` stays as the deployed legacy app until the rebuild reaches feature parity; then `app.html` is renamed to `index.html` and the old file is removed.
+
+Design reference (chosen direction "C · Bulbasaur dusk", light + dark, all screens): https://claude.ai/code/artifact/9e84dd2e-4487-4df9-a261-c29452cb15ce — its **Tokens** page is the source of truth for colours, type and sizes.
+
+### Layout
+
+- `app.html` — the new shell (phase 1: a diagnostics page that boots the modules; the real UI replaces it screen by screen)
+- `src/constants.js` — API base, categories, storage keys, regexes, the static catalog URL
+- `src/util.js` — `esc`, `money`, `cleanName`, `cmpNum`, `cmpSid`, `today`
+- `src/catalog.js` — `normalizeProduct`, `indexCatalog` → `{ byId, bySet }` (**both keyed by string ids**), `isSealedProduct`, `patternOf`, `variantRank`, `shortVariant`, `isChaseRarity`, `isHighValueRarity`, `groupPrintings`, `newestSets`
+- `src/pricing.js` — `flattenPricing`, `dropPatternReverseDupes`, `applySetPricing`, `variantsFor`, `primaryVariant`, `priceOf`, `prunePrices`
+- `src/search.js` — `matchScore`, `searchCatalog(catalog, term, limit)`
+- `src/collection.js` — every ownership / wishlist / folder / tracked-set operation as a pure function over plain data (`setQty`, `ownState`, `groupState`, `quickToggle`, `setStats`, `toggleCardFolder`, `exportPayload`, `parseImport`, …)
+- `src/history.js` — `snapshot`, `trendInfo`, `moversInfo`, `productSeries`
+- `src/crypto.js`, `src/sync.js` — the encryption and the PostgREST client (`createSyncClient(cfg, fetch)`), `pickVault` / `applyVault`
+- `src/storage.js` — `loadAll(ls)` / `save.*` over the **unchanged** localStorage keys, the v2 migration, IndexedDB helpers
+- `src/api.js` — `apiGet`, `fetchSets`, `fetchSetProducts`, `fetchSetPricing`, `crawlCatalog`, `loadStaticCatalog`, `buildStaticDocument` (environment-neutral: browser + Node)
+- `src/store.js` — `createStore`: `state`, `subscribe`, `update(fn, ...slices)` persists the named slices and notifies
+- `src/app.js` — `createApp()`: lifecycle (`boot`, `buildCatalog`, `loadSetPricing`, `refreshValues`, sync)
+- `tests/*.test.js` — `npm test` (`node --test`), fixtures in `tests/fixtures/` are real API responses (Prismatic Evolutions incl. Poké Ball / Master Ball pattern products; Surging Sparks "Iron Bundle")
+- `scripts/build-catalog.mjs` + `.github/workflows/catalog.yml` — daily crawl → `catalog.json.gz` + `catalog-meta.json` force-pushed to the orphan branch `catalog-data`; the app downloads that on first run and falls back to crawling the API
+
+### Conventions in the new code
+
+- Pure modules never touch `document`, `localStorage` or `fetch` directly; `fetch` / `localStorage` / `indexedDB` are injectable for tests.
+- Storage keys and IndexedDB name are unchanged so existing devices keep their data.
+- Mutations go through `store.update(fn, ...slices)`; name every slice you touched so it is persisted and the dirty flag / sync push fire.
+
+### Rebuild plan
+
+1. ✅ Foundation: modules + 45 tests + static catalog build + `app.html` boot page.
+2. UI shell against the design: tokens/theme (light + dark), bottom nav (Home · Sets · Search · Collection · Wishlist), router with history so back closes sheets, then screens in order Sets → set detail (list + 3×3 binder) → card sheet → Search → Collection → Wishlist → Home → Settings.
+3. PWA: service worker (app shell + image cache), manifest, offline indicators; haptics; skeletons.
+4. Cut over: rename `app.html` → `index.html`, delete `PokeVault.html`, update README.
+
+---
+
+## The legacy app (`PokeVault.html`) — everything below describes it
+
 ## What it is
 
 A personal Pokémon TCG collection tracker. **One file: `PokeVault.html`** — HTML + CSS + vanilla JS, no framework, no build step, no npm dependencies. It runs by opening the file in a browser; it's mobile-first.
@@ -102,6 +143,24 @@ Optional, **passphrase-based, no accounts**. Backend = a user-owned **Supabase**
 ## Verifying changes
 
 Development so far has been verified with **jsdom + fake-indexeddb**, mocking the three external services (TCGTracking, Supabase, allorigins) and injecting Node's `webcrypto` for the encryption paths — several hundred assertions across feature additions. Formalizing that into a committed test file/runner is a sensible early step in the repo. There is no build to run.
+
+## Design directions explored
+
+Several visual directions for the dashboard and overall app feel were prototyped as standalone HTML files sitting alongside `PokeVault.html` (open in a browser to view):
+
+- `dashboard-concepts.html` — Polished / Vivid / Nightshift variants of the current light theme, all introducing a Worth-card hero with a value-trend sparkline plus a quick-stats strip.
+- `radial-nav-concept.html` — interactive Poké Ball bloom menu replacing the 5-tab bar (Pokémon GO style). Tap-to-toggle.
+- `neumorphism-concept.html` — pure neumorphism vs. a hybrid (soft tactile chrome, crisp art and content). Hybrid is the recommendation; pure trades too much legibility for vibe in a content-dense app.
+- `pokevault-plays-concept.html` — Pokémon-app DNA: Trainer Card hero (avatar with level ring + title), streak/weekly pills, rarity halos on Top Cards, set-themed progress, trophies shelf. Pulled into one unified warm palette (rose → coral → amber → gold) for cohesion.
+
+**Kalos Pokédex direction (noted, not yet mocked).** The chunky chrome / glowing-cyan-lens Pokédex from Pokémon X/Y was raised as reference. Surgical moves that translate well without going fully skeuomorphic:
+
+- **Card detail as a "Pokédex page"** — the highest-impact single moment. Tapping a card opens a hinged-style modal: large card art on a top "screen," variants / price / set info on a bottom "screen," chunky chrome bezel framing the whole thing. Contained to one moment; very on-brand.
+- **Glowing-cyan tap feedback** — interactive elements get a soft cyan glow halo on press (the Pokédex Y-button lens). Rose stays the brand color; cyan becomes the "tap me" tell.
+- **Cool-cyan accents inside the rose chrome** — adopt the hot/cool tension that makes the Pokédex feel premium (screen palette is cool against the red shell). Inputs, info icons, selected states glow cyan.
+- **Faint Pokémon silhouettes** in section backgrounds — ~5–10 % opacity, Easter-egg energy.
+
+Going *fully* skeuomorphic (the whole app wrapped in red chrome with screws and bezels) would look striking in screenshots but be exhausting in daily use — the Kalos Pokédex was designed for a self-contained 3DS app, not a tracker you open ten times a day. The surgical version captures the spirit without paying that cost.
 
 ## Possible next steps
 

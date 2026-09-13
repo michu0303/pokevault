@@ -1,0 +1,13 @@
+{
+  "name": "pokevault",
+  "version": "5.0.0-dev",
+  "private": true,
+  "type": "module",
+  "description": "Personal Pokémon TCG collection tracker — static app, no framework, no bundler.",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\"",
+    "build:catalog": "node scripts/build-catalog.mjs",
+    "serve": "python3 -m http.server 8080"
+  },
+  "engines": { "node": ">=20" }
+}

@@ -1,0 +1,50 @@
+{
+ "set": {
+  "id": 23651,
+  "name": "SV08: Surging Sparks",
+  "cat": 3,
+  "published_on": "2024-11-08"
+ },
+ "products": [
+  {
+   "id": 589969,
+   "name": "Iron Bundle",
+   "clean_name": "Iron Bundle",
+   "number": "055/191",
+   "rarity": "Uncommon",
+   "image_url": "https://cdn.tcgtracking.com/product/589969_200w.jpg"
+  },
+  {
+   "id": 590025,
+   "name": "Pikachu ex - 057/191",
+   "clean_name": "Pikachu ex - 057/191",
+   "number": "057/191",
+   "rarity": "Double Rare",
+   "image_url": "https://cdn.tcgtracking.com/product/590025_200w.jpg"
+  },
+  {
+   "id": 590026,
+   "name": "Pikachu ex - 219/191",
+   "clean_name": "Pikachu ex - 219/191",
+   "number": "219/191",
+   "rarity": "Ultra Rare",
+   "image_url": "https://cdn.tcgtracking.com/product/590026_200w.jpg"
+  },
+  {
+   "id": 590027,
+   "name": "Pikachu ex - 238/191",
+   "clean_name": "Pikachu ex - 238/191",
+   "number": "238/191",
+   "rarity": "Special Illustration Rare",
+   "image_url": "https://cdn.tcgtracking.com/product/590027_200w.jpg"
+  },
+  {
+   "id": 593169,
+   "name": "Pikachu ex - 247/191",
+   "clean_name": "Pikachu ex - 247/191",
+   "number": "247/191",
+   "rarity": "Hyper Rare",
+   "image_url": "https://cdn.tcgtracking.com/product/593169_200w.jpg"
+  }
+ ]
+}

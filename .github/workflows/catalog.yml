@@ -1,0 +1,28 @@
+name: Build catalog
+# Crawls the TCGTracking API once a day and publishes the compressed catalog to
+# the orphan branch `catalog-data` (force-pushed, so the repo never grows).
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: catalog
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: node scripts/build-catalog.mjs dist
+      - name: Publish to catalog-data branch
+        run: |
+          cd dist
+          git init -q
+          git checkout -q -b catalog-data
+          git config user.name "catalog-bot"
+          git config user.email "catalog-bot@users.noreply.github.com"
+          git add catalog.json.gz catalog-meta.json
+          git commit -q -m "catalog $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" catalog-data

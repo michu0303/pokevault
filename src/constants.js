@@ -1,0 +1,32 @@
+// Shared constants. Storage keys are versioned by when they were introduced —
+// never renumber them, it would orphan existing data on every device.
+export const API = "https://tcgtracking.com/tcgapi/v1";
+export const CAT = 3;      // Pokémon (English)
+export const CAT_JP = 85;  // Pokémon Japan
+export const CATS = [CAT, CAT_JP];
+
+// Pre-built catalog published daily by .github/workflows/catalog.yml to the
+// orphan branch `catalog-data`. Set to "" to always crawl the API instead.
+export const CATALOG_URL = "https://raw.githubusercontent.com/michu0303/pokevault/catalog-data/catalog.json.gz";
+export const CATALOG_META_URL = "https://raw.githubusercontent.com/michu0303/pokevault/catalog-data/catalog-meta.json";
+
+export const LS = {
+  OWNED: "pv3_owned", WISH: "pv3_wishlist", PRICES: "pv3_prices", TRACKED: "pv3_tracked",
+  FAV: "pv4_favorites", META: "pv2_catalog_meta", HISTORY: "pv4_history", PREFS: "pv4_prefs",
+  SYNC: "pv4_sync", DIRTY: "pv4_dirty", WFOLDERS: "pv4_wishfolders", SETDATES: "pv4_setdates",
+  LEGACY_COLLECTION: "pv2_collection",
+};
+export const IDB_NAME = "pokevault";
+export const IDB_STORE = "catalog";
+
+// "bundle" alone is split into a second branch so it only matches with a
+// sealed-context prefix (booster|pack|battle|premium|art|sleeved). Bare
+// "bundle" would catch the Pokémon "Iron Bundle" (Surging Sparks #055).
+export const SEALED_RE = /\b(booster|box|tin|blister|elite trainer|build\s*&?\s*battle|collection|gift set|display|case|theme deck|battle deck|starter|toolkit|calendar)\b|\b(booster|pack|battle|premium|art|sleeved)\s+bundle\b/i;
+// Rarities whose quantity matters (value) — these get steppers, not toggles.
+export const CHASE_RE = /double rare|ultra|illustration|hyper|secret|rainbow|amazing|radiant|shiny|prism|legend|break|prime|\bgx\b|\bex\b|vmax|vstar|v-?union|\bv\b|lv\.?\s?x|holo star|\bace\b/i;
+// Ultra Rare and higher — the Collection tab's rarity filter.
+export const HIVALUE_RE = /ultra|illustration|hyper|secret|rainbow|gold|crown|shiny|amazing|radiant|prism|vmax|vstar|legend|lv\.?\s?x|\bstar\b/i;
+
+export const HISTORY_MAX = 24;
+export const SEARCH_LIMIT = 240;
