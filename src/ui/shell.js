@@ -30,7 +30,7 @@ export function mountShell(app, screens) {
   applyTheme(state.prefs.theme);
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => applyTheme(state.prefs.theme));
 
-  navEl.innerHTML = TABS.map(([k, l, ic]) => `<button data-action="nav" data-tab="${k}" aria-label="${l}">${I[ic]}${I[ic + "F"]}<span>${l}</span></button>`).join("");
+  navEl.innerHTML = TABS.map(([k, l, ic]) => `<button data-action="nav" data-tab="${k}" aria-label="${l}"><span class="nico">${I[ic]}${I[ic + "F"]}</span><span>${l}</span></button>`).join("");
   delegate(navEl, { nav: (el) => { const t = el.dataset.tab; if (router.route.tab === t && router.route.parts.length <= 1 && !router.route.query.card) { window.scrollTo({ top: 0, behavior: "smooth" }); return; } router.go("/" + t); } });
 
   function paintNav() {

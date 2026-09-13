@@ -252,3 +252,52 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 html{scrollbar-gutter:stable}
 #screen{padding-top:env(safe-area-inset-top)}
 .topbar{padding-top:6px}
+
+/* =========================================================================
+   Style pass v2 — grouped lists, hero worth card, art-only top cards,
+   nav pill, display face, in-palette stage, press feedback, binder page
+   ========================================================================= */
+:root{--display:Outfit,Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--hero-bg:#1d2a26;--hero-ink:#e6ece8;--hero-sec:#97a8a2;--stage:#15201d}
+:root[data-theme="dark"],:root:not([data-theme="light"]).sys-dark{--hero-bg:#26332f;--stage:#0b1210}
+.topbar h1,.summary .v,.title h3,.pricebox .pv,.prog .pt,.pager .pg{font-family:var(--display);letter-spacing:-.01em}
+.topbar h1{font-weight:700}.summary .v{font-weight:700;letter-spacing:-.02em}
+/* grouped lists: one surface, hairline dividers */
+.stack.group{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);gap:0;overflow:hidden}
+.stack.group>.card{background:none;border:0;border-radius:0}
+.stack.group>.card+.card{border-top:1px solid var(--border)}
+.stack.group>.btn{margin:8px}
+.stack.group .setrow.done{background:var(--has-bg)}
+/* section headers */
+.sec h2{font-size:17px;font-family:var(--display);font-weight:700;letter-spacing:-.01em}
+.sec .more{color:var(--strong)}
+/* hero worth card */
+.summary.hero{background:var(--hero-bg);border-color:transparent;--ink:var(--hero-ink);--sec:var(--hero-sec);--border:rgba(255,255,255,.14);--chip:rgba(255,255,255,.08);--surface:var(--hero-bg);--spark:#8fc4b9;--spark-fill:rgba(143,196,185,.16);--pos-text:#a3c491;--neg:#f0a0aa;--strong:#8fc4b9;--on-strong:#0f1a17;color:var(--hero-ink)}
+.summary.hero .l,.summary.hero .s{color:var(--hero-sec)}
+.summary.hero .v{color:var(--hero-ink)}
+.summary.hero .chip{color:var(--hero-sec);border-color:rgba(255,255,255,.14)}
+.summary.hero .chip.on{background:#8fc4b9;color:#0f1a17;border-color:#8fc4b9}
+/* art-only top cards */
+.arttiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.arttile{position:relative;aspect-ratio:.717;border-radius:var(--r-tile);overflow:hidden;background:var(--imgbg);cursor:pointer;box-shadow:var(--shadow)}
+.arttile img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s}.arttile img.ld{opacity:1}
+.arttile .pill{position:absolute;left:6px;right:6px;bottom:6px;background:rgba(21,32,29,.78);color:#e6ece8;font-size:11px;font-weight:800;padding:5px 8px;border-radius:8px;text-align:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.arttile .rank{position:absolute;top:6px;left:6px;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center}
+/* nav */
+.nav button{font-size:11px;gap:2px}
+.nav .nico{width:56px;height:32px;border-radius:16px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.nav svg{width:26px;height:26px}
+.nav button.on .nico{background:rgba(78,122,114,.16)}
+:root[data-theme="dark"] .nav button.on .nico,:root:not([data-theme="light"]).sys-dark .nav button.on .nico{background:rgba(127,179,170,.18)}
+/* press feedback */
+.setrow,.lrow .tap,.crow .tap,.tile .art,.pocket,.stackcard,.btn,.chip,.arttile,.vrow.toggle,.quick i,.iconbtn{transition:transform .08s ease,background .15s}
+.setrow:active,.lrow .tap:active,.crow .tap:active,.tile .art:active,.pocket:active,.stackcard:active,.btn:active,.chip:active,.arttile:active,.vrow.toggle:active,.iconbtn:active{transform:scale(.97)}
+/* binder page */
+.binder{background:var(--soft);padding:10px;border-radius:14px;gap:8px}
+.pocket{border-color:transparent;box-shadow:var(--shadow)}
+.pocket.miss{background:transparent;border:1.5px dashed var(--faint);box-shadow:none}
+.pocket.miss img{filter:grayscale(1);opacity:.22}
+.pocket.miss img:not(.ld){opacity:0}
+.pocket.miss .num{background:var(--faint);color:var(--surface)}
+.pocket.miss .badge{display:none}
+/* cards/sealed switch sits above the filters, not inside the progress card */
+.secseg{margin-bottom:-4px}

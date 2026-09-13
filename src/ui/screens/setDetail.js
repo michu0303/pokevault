@@ -23,6 +23,7 @@ export function mount(root, ctx) {
   root.innerHTML = `
     <div class="topbar tight"><button class="iconbtn back" data-action="back" aria-label="Back">${I.back}</button><h1 class="sm">${esc(g.name)}</h1><button class="iconbtn star" data-action="star" aria-label="Track set"></button></div>
     <div class="card prog" data-region="prog"></div>
+    ${g.sealed.length ? `<div class="seg secseg" data-region="secseg"></div>` : ""}
     <div class="filtrow" data-region="filters"></div>
     <div data-region="body"></div>`;
 
@@ -43,12 +44,14 @@ export function mount(root, ctx) {
     const partial = sec === "sealed" ? 0 : g.groups.filter((grp) => groupState(state.owned, state.flatPrices, grp) === "partial").length;
     $("[data-region=prog]", root).innerHTML = `<div class="ring">${progressRing(pct)}<b class="num">${Math.round(pct * 100)}%</b></div>
       <div class="pi"><div class="pt num">${done} / ${total} ${sec === "sealed" ? "sealed" : "cards"}</div><div class="ps num">${total - done} missing${partial ? " · " + partial + " partial" : ""}</div><div class="pv num">${money(sec === "sealed" ? st.sealedVal : st.value)} collected${pricesLoading ? " · loading prices…" : ""}</div></div>
-      ${g.sealed.length ? `<div class="seg compact"><button class="${sec !== "sealed" ? "on" : ""}" data-action="sec" data-sec="cards">Cards</button><button class="${sec === "sealed" ? "on" : ""}" data-action="sec" data-sec="sealed">Sealed</button></div>` : ""}`;
+`;
     const tracked = isTracked(state, sid);
     const star = $("[data-action=star]", root); star.innerHTML = tracked ? I.star : I.starO; star.style.color = tracked ? "var(--gold)" : "";
   }
   function paintFilters() {
     const { view, f, r, sec } = qv();
+    const ss = $("[data-region=secseg]", root);
+    if (ss) ss.innerHTML = `<button class="${sec !== "sealed" ? "on" : ""}" data-action="sec" data-sec="cards">Cards · ${g.groups.length}</button><button class="${sec === "sealed" ? "on" : ""}" data-action="sec" data-sec="sealed">Sealed · ${g.sealed.length}</button>`;
     if (sec === "sealed") { $("[data-region=filters]", root).innerHTML = ""; return; }
     const rars = [...new Set(g.cards.map((p) => p.r).filter(Boolean))].sort();
     $("[data-region=filters]", root).innerHTML = `<div class="chips">
@@ -63,7 +66,7 @@ export function mount(root, ctx) {
     const { view, sec, page } = qv();
     const body = $("[data-region=body]", root);
     if (sec === "sealed") {
-      body.innerHTML = `<div class="stack">${g.sealed.map((p) => { const q = ownedTotal(state.owned, p.i), v = vf(p.i)[0], px = priceOf(state.flatPrices, p.i, v);
+      body.innerHTML = `<div class="stack group">${g.sealed.map((p) => { const q = ownedTotal(state.owned, p.i), v = vf(p.i)[0], px = priceOf(state.flatPrices, p.i, v);
         return `<div class="card crow"><div class="tap" data-action="card" data-pid="${p.i}"><div class="thumb">${imgTag(imgUrl(p), p.n)}</div><div class="info"><div class="nm">${esc(displayName(p))}</div><div class="meta num">${px != null ? money(px) + " each" : "price unavailable"}</div></div></div>
           <div class="stepper"><button data-action="dec" data-pid="${p.i}" data-v="${esc(v)}" aria-label="Remove one">−</button><span class="q num">${q}</span><button data-action="inc" data-pid="${p.i}" data-v="${esc(v)}" aria-label="Add one">+</button></div></div>`; }).join("") || `<div class="empty">No sealed products in this set.</div>`}</div>`;
       return;
@@ -71,7 +74,7 @@ export function mount(root, ctx) {
     const grs = groups();
     if (!grs.length) { body.innerHTML = `<div class="empty">${qv().f === "owned" ? "Nothing complete here yet." : qv().f === "missing" ? "<b>Set complete!</b> Nothing missing." : "No cards match."}</div>`; return; }
     if (view === "list") {
-      body.innerHTML = `<div class="stack">${grs.map((grp) => {
+      body.innerHTML = `<div class="stack group">${grs.map((grp) => {
         const base = grp.products[0], chase = grp.products.some((p) => isChaseRarity(p.r));
         const printings = groupPrintings(grp, vf);
         const togs = chase

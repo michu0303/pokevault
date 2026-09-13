@@ -12,7 +12,7 @@ export function mount(root, ctx) {
     <div class="topbar"><h1>Sets</h1><button class="iconbtn boxed" data-action="settings" aria-label="Settings">${I.gear}</button></div>
     <label class="search">${I.search}<input type="search" placeholder="Find a set to track…" autocomplete="off" autocorrect="off" spellcheck="false"><button class="clear hidden" data-action="clear">Clear</button></label>
     <div class="seg" data-region="seg"></div>
-    <div class="stack" data-region="list"></div>`;
+    <div class="stack group" data-region="list"></div>`;
   const input = $("input", root);
   const rows = (sets) => sets.map((s) => {
     const st = setStats(s.g, state.owned, state.flatPrices);

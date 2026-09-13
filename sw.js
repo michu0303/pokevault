@@ -4,7 +4,7 @@
 //  - card images (cdn.tcgtracking.com): stale-while-revalidate, so anything
 //    you've viewed loads offline and "Download images" can pre-warm a set
 //  - API calls: network only (prices must be fresh; the catalog lives in IndexedDB)
-const VERSION = "2026-09-13.6";
+const VERSION = "2026-09-13.7";
 const SHELL = "pv-shell-" + VERSION, IMAGES = "pv-images-v1", FONTS = "pv-fonts-v1";
 const SHELL_FILES = [
   "./app.html", "./manifest.webmanifest", "./styles/tokens.css", "./styles/app.css",

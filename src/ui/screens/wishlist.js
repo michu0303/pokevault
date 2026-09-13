@@ -25,14 +25,14 @@ export function mount(root, ctx) {
     if (fo) {
       root.innerHTML = `<div class="topbar tight"><button class="iconbtn back" data-action="back" aria-label="Back">${I.back}</button><h1 class="sm">${esc(fo.name)}</h1><button class="iconbtn boxed" data-action="menu" aria-label="Folder options">${I.dots}</button></div>
         <div class="card summary" style="padding:12px 16px"><div class="l">${folderCount(fo)} card${folderCount(fo) === 1 ? "" : "s"}</div><div class="v num" style="font-size:26px">${money(total)}</div><div class="s">${SORTS[f.sort]}</div></div>
-        <div class="sec"><h2>Cards</h2>${hd}</div><div class="stack">${list.map(row).join("") || `<div class="empty">Nothing in this folder yet. Open a card and use the folder button.</div>`}</div>`;
+        <div class="sec"><h2>Cards</h2>${hd}</div><div class="stack group">${list.map(row).join("") || `<div class="empty">Nothing in this folder yet. Open a card and use the folder button.</div>`}</div>`;
       return;
     }
     const strip = state.wishFolders.map((x) => { const cs = Object.keys(x.items || {}).map((pid) => state.byId.get(pid)).filter(Boolean); const v = cs.reduce((a, c) => a + (cardValue(c, state) || 0), 0); const top = cs.slice().sort((a, b) => (cardValue(b, state) || 0) - (cardValue(a, state) || 0)); return `<button class="card stackcard" data-action="open" data-fid="${esc(x.id)}">${artFan(top)}<div class="fn">${esc(x.name)}</div><div class="fc num">${folderCount(x) ? `${folderCount(x)} card${folderCount(x) === 1 ? "" : "s"} · ${money(v)}` : "Empty"}</div></button>`; }).join("");
     root.innerHTML = `<div class="topbar"><h1>Wishlist</h1><button class="btn ghost sm" data-action="new">${I.plus} Folder</button></div>
       ${state.wishFolders.length ? `<div class="fstrip">${strip}</div>` : ""}
       <div class="sec"><h2>Unsorted · ${cards().length}</h2>${hd}</div>
-      <div class="stack">${list.map(row).join("") || (Object.keys(state.wishlist).length ? `<div class="empty">Every wishlisted card is filed in a folder.</div>` : `<div class="card empty"><b>Your wishlist is empty.</b><br>Search for a card and tap the heart.</div>`)}</div>`;
+      <div class="stack group">${list.map(row).join("") || (Object.keys(state.wishlist).length ? `<div class="empty">Every wishlisted card is filed in a folder.</div>` : `<div class="card empty"><b>Your wishlist is empty.</b><br>Search for a card and tap the heart.</div>`)}</div>`;
   }
   function openSheet(name) {
     if (sheet) sheet.unmount(); sheet = null;
