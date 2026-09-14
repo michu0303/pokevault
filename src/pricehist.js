@@ -10,7 +10,10 @@ export function appendDay(hist, day, flat, cap = HIST_DAYS) {
   const h = hist && hist.format === 1 ? { format: 1, sid: hist.sid, days: hist.days.slice(), v: { ...hist.v }, p: {} } : { format: 1, sid: undefined, days: [], v: {}, p: {} };
   for (const pid in (hist && hist.p) || {}) h.p[pid] = hist.p[pid].slice();
   let col = h.days.indexOf(day);
-  if (col < 0) { h.days.push(day); col = h.days.length - 1; for (const pid in h.p) h.p[pid].push(null); }
+  if (col < 0) {                                   // insert in date order (backfills arrive out of order)
+    col = h.days.findIndex((d) => d > day); if (col < 0) col = h.days.length;
+    h.days.splice(col, 0, day); for (const pid in h.p) h.p[pid].splice(col, 0, null);
+  }
   for (const pid in flat) {
     const v = h.v[pid] || primaryVariant(flat, pid);
     const px = flat[pid][v] != null ? flat[pid][v] : null;

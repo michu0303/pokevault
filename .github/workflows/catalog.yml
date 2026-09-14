@@ -6,6 +6,11 @@ on:
   schedule:
     - cron: "17 6 * * *"
   workflow_dispatch:
+    inputs:
+      backfill_from:
+        description: "Backfill price history from this date (YYYY-MM-DD, earliest 2024-02-08). Leave empty for the normal daily run."
+        required: false
+        default: ""
 permissions:
   contents: write
 concurrency: catalog
@@ -24,7 +29,13 @@ jobs:
           fi
           ls prev/hist | wc -l
       - run: node scripts/build-catalog.mjs dist
-      - run: node scripts/build-prices.mjs dist/hist prev/hist
+      - name: Backfill price history (manual runs only)
+        if: ${{ github.event.inputs.backfill_from != '' }}
+        run: |
+          sudo apt-get install -y -qq p7zip-full >/dev/null
+          mkdir -p dist/hist && cp -r prev/hist/. dist/hist/ 2>/dev/null || true
+          node scripts/backfill-prices.mjs dist/hist --from "${{ github.event.inputs.backfill_from }}"
+      - run: node scripts/build-prices.mjs dist/hist ${{ github.event.inputs.backfill_from != '' && 'dist/hist' || 'prev/hist' }}
       - name: Publish to catalog-data branch
         run: |
           cd dist
