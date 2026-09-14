@@ -4,7 +4,7 @@
 //  - card images (cdn.tcgtracking.com): stale-while-revalidate, so anything
 //    you've viewed loads offline and "Download images" can pre-warm a set
 //  - API calls: network only (prices must be fresh; the catalog lives in IndexedDB)
-const VERSION = "2026-09-14.12";
+const VERSION = "2026-09-14.13";
 const SHELL = "pv-shell-" + VERSION, IMAGES = "pv-images-v1", FONTS = "pv-fonts-v1";
 const SHELL_FILES = [
   "./app.html", "./manifest.webmanifest", "./styles/tokens.css", "./styles/app.css",
@@ -18,7 +18,13 @@ const SHELL_FILES = [
 const IMAGE_CAP = 6000;
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(SHELL).then((c) => c.addAll(SHELL_FILES)).then(() => self.skipWaiting()));
+  // bypass the HTTP cache: GitHub Pages serves files with max-age=600, so a plain
+  // addAll could precache files that are minutes stale and miss a deploy entirely
+  e.waitUntil(caches.open(SHELL).then((c) => Promise.all(SHELL_FILES.map(async (u) => {
+    const res = await fetch(u, { cache: "reload" });
+    if (!res.ok) throw new Error("precache failed: " + u);
+    await c.put(u, res);
+  }))).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", (e) => {
   e.waitUntil((async () => {
