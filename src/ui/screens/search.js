@@ -88,7 +88,6 @@ export function mount(root, ctx) {
     filters: () => ctx.router.setQuery({ sheet: "filters" }, { replace: false }),
   });
   run();
-  if (!f.term) setTimeout(() => input.focus(), 50);
   return {
     route: (r) => openSheet(r.query.sheet),
     update: (changed) => { if (changed.has("owned")) patchOwned(); if (changed.has("wishlist")) patchWish(); if (changed.has("flatPrices")) { if (f.sort.startsWith("val")) paint(); else patchPrices(); } if (changed.has("prefs")) paintRecent(); },

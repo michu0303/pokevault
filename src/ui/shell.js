@@ -67,6 +67,8 @@ export function mountShell(app, screens) {
   window.addEventListener("scroll", stuck, { passive: true });
   // iOS Safari only applies :active styles on touch when a touchstart listener exists
   document.body.addEventListener("touchstart", () => {}, { passive: true });
+  // iOS (standalone especially) can leave fixed bars floating after the keyboard closes; a no-op scroll re-anchors them
+  document.addEventListener("focusout", (e) => { if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) setTimeout(() => window.scrollTo(window.scrollX, window.scrollY), 60); });
   router.start();
   window.addEventListener("offline", () => toast("You’re offline — cached cards and prices only"));
   window.addEventListener("online", () => toast("Back online"));

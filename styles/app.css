@@ -377,3 +377,8 @@ input:focus-visible{outline:none}
 .topbar.sticky{top:0;padding-top:calc(env(safe-area-inset-top,0px) + 6px);padding-bottom:6px;z-index:22}
 .sticky.below{top:calc(env(safe-area-inset-top,0px) + 64px);z-index:21}
 .topbar.sticky{min-height:calc(env(safe-area-inset-top,0px) + 64px);box-sizing:border-box}
+
+/* ---- lower, tighter bottom nav (still clear of the home indicator) ---- */
+:root{--nav-h:62px}
+.nav{padding:2px 4px calc(env(safe-area-inset-bottom,0px) + 2px)}
+.nav button{gap:1px}
