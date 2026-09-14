@@ -47,6 +47,15 @@ test("sync client: pull null on empty vault, push upserts with the anon headers,
   await assert.rejects(createSyncClient({ ...cfg, pass: "other" }, fakeFetch({ "re:vault": () => [stored] })).pull(), /Wrong passphrase/);
   await assert.rejects(createSyncClient(cfg, fakeFetch({ "re:vault": { status: 401, body: "bad key" } })).pull(), /Cloud error 401: bad key/);
 });
+test("publishable keys are sent as apikey only; legacy anon JWTs also as Bearer", async () => {
+  const f1 = fakeFetch({ "re:vault": [] });
+  await createSyncClient({ url: "https://x.supabase.co", key: "sb_publishable_abc", pass: "p" }, f1).exists();
+  assert.equal(f1.calls[0].opts.headers.apikey, "sb_publishable_abc");
+  assert.equal("Authorization" in f1.calls[0].opts.headers, false);
+  const f2 = fakeFetch({ "re:vault": [] });
+  await createSyncClient({ url: "https://x.supabase.co", key: "eyJhbGciOi.legacy.jwt", pass: "p" }, f2).exists();
+  assert.equal(f2.calls[0].opts.headers.Authorization, "Bearer eyJhbGciOi.legacy.jwt");
+});
 test("pickVault / applyVault", () => {
   const col = emptyCollection(); col.owned = { 1: { Normal: 1 } };
   assert.deepEqual(Object.keys(pickVault(col)), ["owned", "wishlist", "tracked", "favorites", "wishFolders"]);

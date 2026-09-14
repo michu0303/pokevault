@@ -25,9 +25,12 @@ export function applyVault(blob, col) {
 
 export function createSyncClient(cfg, fetchImpl = globalThis.fetch) {
   const base = normalizeSupabaseUrl(cfg.url);
+  // Legacy anon keys are JWTs and go in both headers; the newer publishable
+  // keys (sb_publishable_…) are not JWTs — the apikey header alone sets the anon role.
+  const auth = /^sb_/i.test(cfg.key || "") ? {} : { Authorization: "Bearer " + cfg.key };
   async function sb(path, opts = {}) {
     const res = await fetchImpl(base + "/rest/v1/" + path, { ...opts,
-      headers: { apikey: cfg.key, Authorization: "Bearer " + cfg.key, ...(opts.headers || {}) } });
+      headers: { apikey: cfg.key, ...auth, ...(opts.headers || {}) } });
     if (!res.ok) {
       let detail = "";
       try { detail = ((await res.text()) || "").replace(/\s+/g, " ").trim().slice(0, 160); } catch (e) {}
