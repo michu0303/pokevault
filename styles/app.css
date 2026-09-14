@@ -345,3 +345,29 @@ html{scrollbar-gutter:stable}
 .binder.c4 .pp{font-size:8.5px;padding:1px 4px}
 .binder.c4 .badge{width:18px;height:18px;right:4px;bottom:4px}
 .binder.c4 .badge svg{width:11px;height:11px}
+
+/* ---- pressed states (colour, not only scale) ---- */
+.btn:active{filter:brightness(.92)}
+.btn.ghost:active,.btn.danger:active{filter:none;background:var(--soft)}
+.iconbtn:active{background:var(--soft)}
+.iconbtn.boxed:active{background:var(--soft);border-color:var(--faint)}
+.chip:active{background:var(--soft)}
+.chip.on:active{background:var(--strong);filter:brightness(.9)}
+.seg button:active:not(.on){background:rgba(44,69,64,.07)}
+:root[data-theme="dark"] .seg button:active:not(.on),:root:not([data-theme="light"]).sys-dark .seg button:active:not(.on){background:rgba(255,255,255,.06)}
+.nav button:active .nico{background:rgba(78,122,114,.22)}
+.stack.group>.card:active,.vrow.toggle:active,.setrow:active,.card.setrow:active{background:var(--soft)}
+.lrow .tap:active,.crow .tap:active{opacity:.7}
+.stepper button:active{background:var(--soft);border-color:var(--faint)}
+.vtog:active .c{border-color:var(--strong)}
+.vtog.on:active .c{filter:brightness(.9)}
+.quick:active i{transform:scale(.88)}
+.pocket:active{filter:brightness(.92)}
+.arttile:active,.stackcard:active{filter:brightness(.94)}
+.pgbtn:active,.sec .more:active{color:var(--strong);background:var(--soft);border-radius:8px}
+.sheet .dim:active{opacity:.9}
+.tile .art:active img{filter:brightness(.9)}
+:is(.btn,.chip,.iconbtn,.seg button,.stepper button,.vtog .c,.pocket,.arttile,.stackcard,.quick i){transition:transform .08s ease,background .12s,filter .12s,border-color .12s}
+/* keyboard focus */
+:focus-visible{outline:2px solid var(--strong);outline-offset:2px}
+input:focus-visible{outline:none}

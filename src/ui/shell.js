@@ -65,6 +65,8 @@ export function mountShell(app, screens) {
   // shadow under sticky bars once they are actually stuck
   const stuck = () => { for (const el of document.querySelectorAll(".sticky")) { const top = parseFloat(getComputedStyle(el).top) || 0; el.classList.toggle("stuck", window.scrollY > 4 && Math.abs(el.getBoundingClientRect().top - top) < 1); } };
   window.addEventListener("scroll", stuck, { passive: true });
+  // iOS Safari only applies :active styles on touch when a touchstart listener exists
+  document.body.addEventListener("touchstart", () => {}, { passive: true });
   router.start();
   window.addEventListener("offline", () => toast("You’re offline — cached cards and prices only"));
   window.addEventListener("online", () => toast("Back online"));
