@@ -69,6 +69,19 @@ export function mountShell(app, screens) {
   document.body.addEventListener("touchstart", () => {}, { passive: true });
   // iOS (standalone especially) can leave fixed bars floating after the keyboard closes; a no-op scroll re-anchors them
   document.addEventListener("focusout", (e) => { if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) setTimeout(() => { window.scrollTo(0, 0); screenEl.scrollTo(screenEl.scrollLeft, screenEl.scrollTop); }, 60); });
+  // Keyboard-aware frame (iOS): size the content area to the visible viewport and hide
+  // the nav while the keyboard is up, so nothing slides or "zooms" when a field is focused.
+  const vv = window.visualViewport;
+  if (vv) {
+    const apply = () => {
+      const covered = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      const kb = covered > 120;
+      document.documentElement.classList.toggle("kb", kb);
+      document.documentElement.style.setProperty("--vvh", Math.round(vv.height) + "px");
+      document.documentElement.style.setProperty("--vvt", Math.round(vv.offsetTop) + "px");
+    };
+    vv.addEventListener("resize", apply); vv.addEventListener("scroll", apply); apply();
+  }
   router.start();
   window.addEventListener("offline", () => toast("You’re offline — cached cards and prices only"));
   window.addEventListener("online", () => toast("Back online"));

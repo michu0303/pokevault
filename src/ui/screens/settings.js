@@ -5,6 +5,7 @@ import { exportPayload, parseImport } from "../../collection.js";
 import { passFingerprint } from "../../crypto.js";
 import { syncConfigured } from "../../sync.js";
 import { today } from "../../util.js";
+import { APP_VERSION } from "../../constants.js";
 import { askConfirm } from "../dialog.js";
 
 export function mount(root, ctx) {
@@ -26,6 +27,7 @@ export function mount(root, ctx) {
         <div class="row2"><button class="btn ghost" data-action="export">Export</button><button class="btn ghost" data-action="import">Import…</button></div><input type="file" accept="application/json,.json" class="hidden" data-region="file"></div>
       <div class="card panel"><h3>Cloud sync</h3>${syncPanel()}</div>
       <div class="card panel"><h3>Danger zone</h3><div class="row2"><button class="btn danger" data-action="clear-col">Clear collection</button><button class="btn danger" data-action="clear-wl">Clear wishlist</button></div></div>
+      <div class="card panel"><h3>About</h3><p>PokéVault <b class="num">${APP_VERSION}</b>${"serviceWorker" in navigator ? " · installed for offline use" : ""}</p><button class="btn ghost" data-action="update">Check for updates</button></div>
       <p class="muted" style="text-align:center;font-size:11.5px;line-height:1.5;padding:0 8px">Card data and prices from the TCGTracking Open TCG API. Not affiliated with Nintendo or The Pokémon Company.</p>`;
     const pi = $("input[data-f=pass]", root);
     if (pi) { let t = null; pi.addEventListener("input", () => { clearTimeout(t); t = setTimeout(async () => { const el = $("[data-region=fp]", root); if (!el) return; el.innerHTML = pi.value ? `Fingerprint <b class="num" style="color:var(--strong)">${esc(await passFingerprint(pi.value))}</b> — must match the other device's` : "Fingerprint appears here as you type — it must match the other device's."; }, 150); }); }
@@ -95,6 +97,7 @@ notify pgrst, 'reload schema';</pre></details>`;
     },
     copy: async (el) => { try { await navigator.clipboard.writeText(el.dataset.v); ctx.toast("Copied"); } catch (e) { ctx.toast("Couldn’t copy — long-press the field to select it"); } },
     reveal: () => { showPass = !showPass; paint(); },
+    update: async () => { try { const reg = await navigator.serviceWorker.getRegistration(); if (!reg) { location.reload(); return; } await reg.update(); if (reg.installing || reg.waiting) ctx.toast("Update found — installing, the app will reload"); else ctx.toast("You’re on the latest version"); } catch (e) { location.reload(); } },
     "sync-now": () => app.pushNow().then(() => ctx.toast(state.syncStatus === "ok" ? "Synced" : state.syncError || "Sync failed")),
     "sync-off": async () => { if (await askConfirm({ title: "Stop syncing on this device?", message: "Your collection stays here and the cloud copy is untouched.", ok: "Disconnect", danger: true })) { app.disconnectSync(); paint(); } },
   });
