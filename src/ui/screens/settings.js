@@ -48,7 +48,7 @@ export function mount(root, ctx) {
     }
     return `<p>Optional. Encrypted on this device with a passphrase; only ciphertext reaches your own free Supabase project. Use the exact same passphrase on every device — a different one opens a different, empty vault.</p>
       <div class="field"><label>Supabase project URL</label><input data-f="url" placeholder="https://xxxx.supabase.co" autocapitalize="off"></div>
-      <div class="field"><label>Anon public key</label><input data-f="key" autocapitalize="off"></div>
+      <div class="field"><label>Anon or publishable key</label><input data-f="key" autocapitalize="off" autocomplete="off" placeholder="sb_publishable_… or eyJ…"></div>
       <div class="field"><label>Passphrase</label><input data-f="pass" type="password" autocapitalize="off" autocomplete="off"><span class="muted" style="font-size:12px;font-weight:700" data-region="fp">Fingerprint appears here as you type — it must match the other device's.</span></div>
       <button class="btn" data-action="sync-on">Connect</button>
       <details><summary class="muted" style="font-size:12.5px;font-weight:700;cursor:pointer">One-time Supabase setup</summary><p style="margin-top:8px">1. Create a free project. 2. In the SQL Editor run the snippet below. 3. Copy the Project URL and anon key from Project Settings → API.</p>
