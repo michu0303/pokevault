@@ -11,8 +11,8 @@ a{color:var(--strong)}
 .num{font-variant-numeric:tabular-nums}
 
 /* ---- layout ---- */
-#screen{max-width:640px;margin:0 auto;padding:0 var(--margin) calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);display:flex;flex-direction:column;gap:12px;min-height:100%}
-.topbar{display:flex;align-items:center;gap:10px;min-height:52px;padding-top:calc(env(safe-area-inset-top) + 6px)}
+#screen{max-width:640px;margin:0 auto;padding:0 var(--margin) calc(var(--nav-h) + var(--sab) + 16px);display:flex;flex-direction:column;gap:12px;min-height:100%}
+.topbar{display:flex;align-items:center;gap:10px;min-height:52px;padding-top:calc(var(--sat) + 6px)}
 .topbar h1{font-size:22px;font-weight:800;letter-spacing:-.3px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .topbar h1.sm{font-size:19px}
 .topbar.tight{gap:2px}
@@ -35,7 +35,7 @@ a{color:var(--strong)}
 .empty .btn{margin-top:14px}
 
 /* ---- nav ---- */
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;height:calc(var(--nav-h) + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border);display:flex;padding:4px 4px calc(env(safe-area-inset-bottom) + 10px)}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;height:calc(var(--nav-h) + var(--sab));background:var(--surface);border-top:1px solid var(--border);display:flex;padding:4px 4px calc(var(--sab) + 10px)}
 .nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:0;font-size:10px;font-weight:700;color:var(--nav-idle);min-height:44px;padding:0}
 .nav button.on{color:var(--strong)}
 .nav svg{width:24px;height:24px}
@@ -166,7 +166,7 @@ a{color:var(--strong)}
   transform:translateY(100%);transition:transform .25s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;max-width:640px;margin:0 auto}
 .sheet.open{transform:translateY(0)}
 .sheet .grip{width:44px;height:5px;border-radius:5px;background:var(--faint);margin:10px auto 0;flex:none}
-.sheet .body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px var(--margin) calc(env(safe-area-inset-bottom) + 20px);display:flex;flex-direction:column;gap:12px}
+.sheet .body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px var(--margin) calc(var(--sab) + 20px);display:flex;flex-direction:column;gap:12px}
 .stage{background:var(--stage);border-radius:var(--r-hero);padding:18px 16px 14px;position:relative;overflow:hidden}
 .stage::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,var(--glow),transparent 60%)}
 .stage .bigart{position:relative;width:190px;margin:0 auto;aspect-ratio:.717;border-radius:10px;overflow:hidden;background:#2a2a30;box-shadow:0 18px 40px -12px rgba(0,0,0,.8);cursor:zoom-in}
@@ -195,7 +195,7 @@ a{color:var(--strong)}
 .zoom img{max-width:100%;max-height:100%;border-radius:10px}
 
 /* ---- misc ---- */
-#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);z-index:95;background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:var(--r-tile);font-size:13px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%;text-align:center}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + var(--sab) + 12px);z-index:95;background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:var(--r-tile);font-size:13px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%;text-align:center}
 #toast.show{opacity:1}
 .spinner{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--strong);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -250,7 +250,7 @@ input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-sea
 .topbar .iconbtn.star svg{width:26px;height:26px}
 /* ---- layout stability + phones ---- */
 html{scrollbar-gutter:stable}
-#screen{padding-top:env(safe-area-inset-top)}
+#screen{padding-top:var(--sat)}
 .topbar{padding-top:6px}
 
 /* =========================================================================
@@ -303,9 +303,9 @@ html{scrollbar-gutter:stable}
 .secseg{margin-bottom:-4px}
 .pricebox .chart{width:100%;height:110px;margin:0}
 /* ---- sticky headers: search fields, filter rows, list heads ---- */
-.sticky{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);margin:0 calc(-1 * var(--margin));padding:4px var(--margin) 8px;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s}
+.sticky{position:sticky;top:var(--sat);z-index:20;background:var(--bg);margin:0 calc(-1 * var(--margin));padding:4px var(--margin) 8px;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s}
 .sticky.stuck{box-shadow:0 10px 16px -12px rgba(20,32,29,.35)}
-.sticky.below{top:calc(env(safe-area-inset-top,0px) + 64px)}
+.sticky.below{top:calc(var(--sat) + 64px)}
 .topbar.sticky{flex-direction:row;align-items:center;padding-top:6px;padding-bottom:6px;gap:10px}
 .topbar.sticky.tight{gap:2px}
 .sticky > .sec{min-height:44px}
@@ -374,11 +374,16 @@ input:focus-visible{outline:none}
 
 /* ---- pinned title bars cover the status-bar area; secondary bars tuck under them ---- */
 #screen{padding-top:0}
-.topbar.sticky{top:0;padding-top:calc(env(safe-area-inset-top,0px) + 6px);padding-bottom:6px;z-index:22}
-.sticky.below{top:calc(env(safe-area-inset-top,0px) + 64px);z-index:21}
-.topbar.sticky{min-height:calc(env(safe-area-inset-top,0px) + 64px);box-sizing:border-box}
+.topbar.sticky{top:0;padding-top:calc(var(--sat) + 6px);padding-bottom:6px;z-index:22}
+.sticky.below{top:calc(var(--sat) + 64px);z-index:21}
+.topbar.sticky{min-height:calc(var(--sat) + 64px);box-sizing:border-box}
 
 /* ---- lower, tighter bottom nav (still clear of the home indicator) ---- */
 :root{--nav-h:62px}
-.nav{padding:2px 4px calc(env(safe-area-inset-bottom,0px) + 2px)}
+.nav{padding:2px 4px calc(var(--sab) + 2px)}
 .nav button{gap:1px}
+
+/* pager: prev · page · next … layout switch; sheets never reach the status bar */
+.pager{justify-content:flex-start;gap:4px}
+.pager .pgbtn{margin-right:auto}
+.sheet{max-height:calc(100dvh - var(--sat) - 20px)}

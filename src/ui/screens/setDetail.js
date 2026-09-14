@@ -66,7 +66,7 @@ export function mount(root, ctx) {
         <span class="chip dd fdrop">${esc(r || "All rarities")} ${I.chevD}<select data-action="rarity" aria-label="Rarity"><option value="">All rarities</option>${rars.map((x) => `<option ${x === r ? "selected" : ""}>${esc(x)}</option>`).join("")}</select></span>
       </div>
       <div class="seg compact icons"><button class="${view === "list" ? "on" : ""}" data-action="view" data-view="list" aria-label="List">${I.list}</button><button class="${view === "binder" ? "on" : ""}" data-action="view" data-view="binder" aria-label="Binder">${I.grid}</button></div>
-      ${view === "binder" ? `<div class="seg compact"><button class="${state.prefs.cols !== 4 ? "on" : ""}" data-action="cols" data-cols="3" aria-label="3 by 3 pockets">3×3</button><button class="${state.prefs.cols === 4 ? "on" : ""}" data-action="cols" data-cols="4" aria-label="4 by 3 pockets">4×3</button></div>` : ""}`;
+`;
     $("select", root).addEventListener("change", (e) => ctx.router.setQuery({ r: e.target.value, page: "" }));
   }
   const badge = (grp) => { const s = groupState(state.owned, state.flatPrices, grp); return `<span class="badge ${s === "complete" ? "full" : s === "partial" ? "part" : ""}">${s === "complete" ? I.check : s === "partial" ? I.dash : I.plus}</span>`; };
@@ -98,7 +98,8 @@ export function mount(root, ctx) {
     const pocketsHtml = (p) => grs.slice(p * PER, p * PER + PER).map((grp) => { const base = grp.products[0], st = groupState(state.owned, state.flatPrices, grp);
         const bp = priceOf(state.flatPrices, base.i, primaryVariant(state.flatPrices, base.i, state.owned));
         return `<div class="pocket ${st === "none" ? "miss" : ""}" data-action="card" data-pid="${base.i}">${imgTag(imgUrl(base), grp.name)}<span class="pno">${esc(grp.number || "")}</span>${bp != null ? `<span class="pp num">${money(bp)}</span>` : ""}${badge(grp)}</div>`; }).join("");
-    const pagerHtml = (p) => `<button class="iconbtn" data-action="page" data-d="-1" ${p === 0 ? "disabled" : ""} aria-label="Previous page">${I.back}</button><button class="pg num pgbtn" data-action="jump" aria-label="Go to a page or card number">Page ${p + 1} of ${pages} ${I.chevD}</button><button class="iconbtn" data-action="page" data-d="1" ${p >= pages - 1 ? "disabled" : ""} aria-label="Next page">${I.chevR}</button>`;
+    const layoutSeg = `<div class="seg compact" style="margin-left:auto"><button class="${state.prefs.cols !== 4 ? "on" : ""}" data-action="cols" data-cols="3" aria-label="3 by 3 pockets">3×3</button><button class="${state.prefs.cols === 4 ? "on" : ""}" data-action="cols" data-cols="4" aria-label="4 by 3 pockets">4×3</button></div>`;
+    const pagerHtml = (p) => `<button class="iconbtn" data-action="page" data-d="-1" ${p === 0 ? "disabled" : ""} aria-label="Previous page">${I.back}</button><button class="pg num pgbtn" data-action="jump" aria-label="Go to a page or card number">Page ${p + 1} of ${pages} ${I.chevD}</button><button class="iconbtn" data-action="page" data-d="1" ${p >= pages - 1 ? "disabled" : ""} aria-label="Next page">${I.chevR}</button>${layoutSeg}`;
     body.innerHTML = `<div class="binder ${state.prefs.cols === 4 ? "c4" : ""}" data-region="binder">${pocketsHtml(pg)}</div>
       <div class="pager" data-region="pager">${pagerHtml(pg)}</div>
       ${pages > 1 ? `<input type="range" class="scrub" min="0" max="${pages - 1}" value="${pg}" aria-label="Binder page" data-region="scrub">` : ""}`;
@@ -150,7 +151,7 @@ export function mount(root, ctx) {
       // keep the first visible card on screen when the page size changes
       const { page } = qv(); const firstIdx = page * PAGE(); const cols = +el.dataset.cols;
       store.update((s) => { s.prefs.cols = cols; }, "prefs");
-      const np = Math.floor(firstIdx / PAGE_OF(cols)); ctx.router.setQuery({ page: np ? String(np) : "" }); paintFilters(); paintBody();
+      const np = Math.floor(firstIdx / PAGE_OF(cols)); ctx.router.setQuery({ page: np ? String(np) : "" }); paintBody();
     },
     page: (el) => flip(+el.dataset.d),
     card: (el) => { if (el.dataset.lp) return; ctx.openCard(el.dataset.pid); },

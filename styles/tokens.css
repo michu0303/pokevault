@@ -11,6 +11,7 @@
   --shadow: 0 1px 3px rgba(44,69,64,.08);
   --r-ctl: 8px; --r-tile: 10px; --r-card: 12px; --r-hero: 16px;
   --margin: 15px; --nav-h: 72px;
+  --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px);
   color-scheme: light;
 }
 :root[data-theme="dark"] { color-scheme: dark; }
