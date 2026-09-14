@@ -31,7 +31,7 @@ export function mountShell(app, screens) {
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => applyTheme(state.prefs.theme));
 
   navEl.innerHTML = TABS.map(([k, l, ic]) => `<button data-action="nav" data-tab="${k}" aria-label="${l}"><span class="nico">${I[ic]}${I[ic + "F"]}</span><span>${l}</span></button>`).join("");
-  delegate(navEl, { nav: (el) => { const t = el.dataset.tab; if (router.route.tab === t && router.route.parts.length <= 1 && !router.route.query.card) { screenEl.scrollTo({ top: 0, behavior: "smooth" }); return; } router.go("/" + t); } });
+  delegate(navEl, { nav: (el) => { const t = el.dataset.tab; if (router.route.tab === t && router.route.parts.length <= 1 && !router.route.query.card) { window.scrollTo({ top: 0, behavior: "smooth" }); return; } router.go("/" + t); } });
 
   function paintNav() {
     const tab = router.route.tab;
@@ -44,7 +44,7 @@ export function mountShell(app, screens) {
       if (active && active.unmount) active.unmount();
       screenEl.innerHTML = "";
       active = screen.mount(screenEl, ctx); activeKey = key;
-      if (!route.query.card) screenEl.scrollTo(0, 0);
+      if (!route.query.card) window.scrollTo(0, 0);
     } else if (active.route) active.route(route);
     paintNav();
     // sheets: card detail
@@ -63,12 +63,12 @@ export function mountShell(app, screens) {
     if (sheet && sheet.update) sheet.update(changed);
   });
   // shadow under sticky bars once they are actually stuck
-  const stuck = () => { for (const el of document.querySelectorAll(".sticky")) { const top = parseFloat(getComputedStyle(el).top) || 0; el.classList.toggle("stuck", screenEl.scrollTop > 4 && Math.abs(el.getBoundingClientRect().top - top) < 1); } };
-  screenEl.addEventListener("scroll", stuck, { passive: true });
+  const stuck = () => { for (const el of document.querySelectorAll(".sticky")) { const top = parseFloat(getComputedStyle(el).top) || 0; el.classList.toggle("stuck", window.scrollY > 4 && Math.abs(el.getBoundingClientRect().top - top) < 1); } };
+  window.addEventListener("scroll", stuck, { passive: true });
   // iOS Safari only applies :active styles on touch when a touchstart listener exists
   document.body.addEventListener("touchstart", () => {}, { passive: true });
   // iOS (standalone especially) can leave fixed bars floating after the keyboard closes; a no-op scroll re-anchors them
-  document.addEventListener("focusout", (e) => { if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) setTimeout(() => { window.scrollTo(0, 0); screenEl.scrollTo(screenEl.scrollLeft, screenEl.scrollTop); }, 60); });
+  document.addEventListener("focusout", (e) => { if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) setTimeout(() => window.scrollTo(window.scrollX, window.scrollY), 60); });
   // Keyboard-aware frame (iOS): size the content area to the visible viewport and hide
   // the nav while the keyboard is up, so nothing slides or "zooms" when a field is focused.
   const vv = window.visualViewport;

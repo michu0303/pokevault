@@ -391,15 +391,12 @@ input:focus-visible{outline:none}
 input,select,textarea{font-size:16px}
 .search input{font-size:16px}
 
-/* ---- fixed app frame: only the content area scrolls (no document rubber-banding under the nav) ---- */
-html,body{height:100%;overflow:hidden;overscroll-behavior:none;scrollbar-gutter:auto}
-#screen{position:fixed;top:0;left:0;right:0;bottom:calc(var(--nav-h) + var(--sab));overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-gutter:stable;max-width:none;margin:0;padding:0 var(--margin) 16px;min-height:0}
-#screen > *{max-width:640px;width:100%;margin-left:auto;margin-right:auto}
-#screen > .sticky{max-width:none;margin-left:calc(-1 * var(--margin));margin-right:calc(-1 * var(--margin));width:auto;padding-left:max(var(--margin), calc((100% - 640px) / 2));padding-right:max(var(--margin), calc((100% - 640px) / 2))}
+/* ---- document scrolling (iOS home-screen apps mis-size fixed frames); no rubber-band on the page itself ---- */
+html{overscroll-behavior:none}
+#screen{min-height:100vh;min-height:100dvh}
 
 /* ---- keyboard open (html.kb from visualViewport): frame follows the visible area, nav hides ---- */
 html.kb .nav{display:none}
-html.kb #screen{top:var(--vvt,0px);height:var(--vvh,100%);bottom:auto}
 html.kb .sheet,html.kb #dialog .sheet{top:var(--vvt,0px);bottom:auto;max-height:var(--vvh,100%);border-radius:0 0 22px 22px}
 html.kb .sheet .grip{display:none}
 html.kb #toast{bottom:auto;top:calc(var(--vvt,0px) + 12px)}
@@ -407,5 +404,5 @@ html.kb #toast{bottom:auto;top:calc(var(--vvt,0px) + 12px)}
 /* ---- nav sits just above the home indicator ---- */
 :root{--nav-pad:max(calc(var(--sab) - 10px), 6px)}
 .nav{height:calc(var(--nav-h) + var(--nav-pad));padding:2px 4px var(--nav-pad)}
-#screen{bottom:calc(var(--nav-h) + var(--nav-pad))}
+#screen{padding-bottom:calc(var(--nav-h) + var(--nav-pad) + 16px)}
 #toast{bottom:calc(var(--nav-h) + var(--nav-pad) + 12px)}
