@@ -1384,6 +1384,12 @@ function syncPanel(){
         <button class="btn secondary" data-action="sync-now">Sync now</button>
         <button class="btn danger" data-action="disconnect-sync">Disconnect</button>
       </div>
+      <details class="synchint"><summary>Sync details — copy these to another device</summary>
+        <div class="syncf" style="margin-top:8px"><label>Project URL</label><input type="text" readonly value="${esc(state.sync.url)}"></div>
+        <div class="syncf"><label>Anon / publishable key</label><input type="text" readonly value="${esc(state.sync.key)}"></div>
+        <div class="syncf"><label>Passphrase</label><input type="${state.syncReveal?"text":"password"}" readonly value="${esc(state.sync.pass)}"></div>
+        <button class="btn secondary sm" data-action="sync-reveal">${state.syncReveal?"Hide passphrase":"Show passphrase"}</button>
+      </details>
     </div>`;
   }
   return `<div class="panel">
@@ -2782,6 +2788,7 @@ document.addEventListener("click",e=>{
     setView("home"); buildCatalog();
   }
   else if(a==="open-set") enterSet(el.dataset.sid,el.dataset.sn);
+  else if(a==="sync-reveal"){ state.syncReveal=!state.syncReveal; renderSettings(); }
   else if(a==="open-filters") openFilters();
   else if(a==="open-search-sort") openSearchSort();
   else if(a==="srch-sort"){ state.search.filters.sort=el.dataset.val; refreshSearchSort(); }
