@@ -28,7 +28,9 @@ Design reference (chosen direction "C · Bulbasaur dusk", light + dark, all scre
 - `src/store.js` — `createStore`: `state`, `subscribe`, `update(fn, ...slices)` persists the named slices and notifies
 - `src/app.js` — `createApp()`: lifecycle (`boot`, `buildCatalog`, `loadSetPricing`, `refreshValues`, sync)
 - `tests/*.test.js` — `npm test` (`node --test`), fixtures in `tests/fixtures/` are real API responses (Prismatic Evolutions incl. Poké Ball / Master Ball pattern products; Surging Sparks "Iron Bundle")
-- `scripts/build-catalog.mjs` + `.github/workflows/catalog.yml` — daily crawl → `catalog.json.gz` + `catalog-meta.json` force-pushed to the orphan branch `catalog-data`; the app downloads that on first run and falls back to crawling the API
+- `scripts/build-catalog.mjs` + `scripts/build-prices.mjs` + `.github/workflows/catalog.yml` — daily: crawl → `catalog.json.gz` + `catalog-meta.json`, and append today's prices to per-set history files `hist/<setId>.json.gz` (carried over from the previous run), all force-pushed to the orphan branch `catalog-data`. The app downloads the catalog on first run (API crawl as fallback) and fetches a set's history file when a card sheet opens (`app.getPriceHistory(sid)`, merged with the local daily log by `src/pricehist.js`), so any card shows market movement whether owned or not.
+- `src/pricehist.js` — `appendDay`, `seriesOf`, `mergeSeries` (pure; shared by the build script and the app)
+- `src/dev/demo.js` — `app.html?demo=1` seeds mock history / wishlist for previews; `?demo=clear` removes the history
 
 ### Conventions in the new code
 
@@ -42,6 +44,11 @@ Design reference (chosen direction "C · Bulbasaur dusk", light + dark, all scre
 2. ✅ UI: tokens/theme (light + dark), bottom nav (Home · Sets · Search · Collection · Wishlist), hash router, all screens + Settings.
 3. ✅ PWA: service worker (shell precache + image cache), manifest + icons, "Download images for offline use", haptics, skeleton fade-in.
 4. Cut over (pending the user's go): push the branch, enable GitHub Pages (or Netlify) for it, try it on the phone, run the catalog workflow once so `catalog-data` exists, then rename `app.html` → `index.html`, remove `PokeVault.html`, update README.
+
+### Price data model
+- `flatPrices` (localStorage `pv3_prices`, pruned to owned + wishlist) holds the current market price per printing; `state.priceCache[sid]` holds the raw per-set response for the session (low / market / high via `priceDetail`).
+- Local history (`pv4_history`): a year of daily totals, 60 days of per-card `pv` (owned value) and `px` (primary price for owned + wishlisted cards).
+- Server history (`catalog-data/hist/<sid>.json.gz`): one column per day for every product of the set, primary printing only. The card sheet merges server + local (server wins on the same day).
 
 ### Not yet ported from the legacy app / known gaps
 - Sync is still last-write-wins (per-key merge is a planned improvement).

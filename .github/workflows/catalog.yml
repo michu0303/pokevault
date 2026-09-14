@@ -1,6 +1,7 @@
 name: Build catalog
-# Crawls the TCGTracking API once a day and publishes the compressed catalog to
-# the orphan branch `catalog-data` (force-pushed, so the repo never grows).
+# Daily: crawl the TCGTracking API into a compressed catalog and append today's
+# prices to the per-set history files. Everything is force-pushed to the orphan
+# branch `catalog-data` (history files are carried over from the previous run).
 on:
   schedule:
     - cron: "17 6 * * *"
@@ -15,7 +16,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
+      - name: Fetch yesterday's price history
+        run: |
+          mkdir -p prev/hist
+          if git fetch --depth=1 origin catalog-data 2>/dev/null; then
+            git --work-tree=prev checkout FETCH_HEAD -- hist 2>/dev/null || true
+          fi
+          ls prev/hist | wc -l
       - run: node scripts/build-catalog.mjs dist
+      - run: node scripts/build-prices.mjs dist/hist prev/hist
       - name: Publish to catalog-data branch
         run: |
           cd dist
@@ -23,6 +32,6 @@ jobs:
           git checkout -q -b catalog-data
           git config user.name "catalog-bot"
           git config user.email "catalog-bot@users.noreply.github.com"
-          git add catalog.json.gz catalog-meta.json
-          git commit -q -m "catalog $(date -u +%Y-%m-%dT%H:%MZ)"
+          git add catalog.json.gz catalog-meta.json hist
+          git commit -q -m "catalog + prices $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" catalog-data

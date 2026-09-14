@@ -5,6 +5,7 @@ import { getQty, setQty, ownedTotal, isWished, toggleWish, cardFolders } from ".
 import { isChaseRarity, patternOf, shortVariant } from "../../catalog.js";
 import { variantsFor, priceOf, primaryVariant, priceDetail } from "../../pricing.js";
 import { productSeries, rangeSeries } from "../../history.js";
+import { seriesOf, mergeSeries } from "../../pricehist.js";
 import { lineChart, seriesDelta, rangeChips, deltaLine } from "../chart.js";
 import { CAT_JP } from "../../constants.js";
 import { mountSheet } from "../sheet.js";
@@ -19,6 +20,7 @@ export function mountCardSheet(host, ctx, pid) {
   requestAnimationFrame(() => { dim.classList.add("open"); sheet.classList.add("open"); });
   document.body.style.overflow = "hidden";
   let loading = !!c && !state.priceCache[String(c.sid)];
+  let serverHist = null, histLoading = !!c;
   function paint() {
     const body = $("[data-region=body]", host);
     if (!c) { body.innerHTML = `<div class="empty">Card not found in the local catalog.</div>`; return; }
@@ -28,7 +30,7 @@ export function mountCardSheet(host, ctx, pid) {
     const raw = state.priceCache[String(c.sid)];
     const det = priceDetail(raw, c.i, pv);
     const range = state.ui.cardRange || "30";
-    const series = rangeSeries(productSeries(state.history, c.i), +range);
+    const series = rangeSeries(mergeSeries(seriesOf(serverHist, c.i), productSeries(state.history, c.i)), +range);
     const delta = seriesDelta(series);
     const wished = isWished(state, c.i), folders = cardFolders(state, c.i);
     body.innerHTML = `
@@ -39,7 +41,7 @@ export function mountCardSheet(host, ctx, pid) {
         <button class="iconbtn boxed ${wished ? "on" : ""}" data-action="wish" aria-label="${wished ? "Remove from wishlist" : "Add to wishlist"}">${wished ? I.heartF : I.heart}</button>
         <button class="iconbtn boxed ${folders.length ? "on" : ""}" data-action="folders" aria-label="Wishlist folders">${I.folder}</button></div>
       <div class="card pricebox" style="flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><div class="pv num">${loading ? "…" : money(px)}</div><div class="pl">${loading ? "Loading prices" : px == null ? "No market price" : "Market · " + esc(pv) + (det && det.low != null ? ` · Low ${money(det.low)}` : "") + (det && det.high != null ? ` · High ${money(det.high)}` : "")}</div></div>
-        ${series.length > 1 ? `<div class="pl">${deltaLine(delta)}</div>${lineChart(series, { h: 110 })}${rangeChips(range, "crange")}` : `<div class="pl">Price history builds up one point per day while this card is owned or wishlisted.</div>`}</div>
+        ${series.length > 1 ? `<div class="pl">${deltaLine(delta)}</div>${lineChart(series, { h: 110 })}${rangeChips(range, "crange")}` : `<div class="pl">${histLoading ? "Loading price history…" : "No price history for this card yet — the daily price build records every card from the day it starts."}</div>`}</div>
       ${vs.length > 1 ? `<div class="sec"><h2>Printings</h2></div>` : ""}
       <div class="stack group">${vs.map((v) => { const q = getQty(state.owned, c.i, v), p = priceOf(state.flatPrices, c.i, v), d = priceDetail(raw, c.i, v);
         const sub = p != null ? money(p) + (d && d.low != null && d.low !== p ? " · low " + money(d.low) : "") : "price unavailable";
@@ -75,6 +77,7 @@ export function mountCardSheet(host, ctx, pid) {
     } });
   }
   paint();
+  if (c) app.getPriceHistory(c.sid).then((h) => { serverHist = h; histLoading = false; paint(); });
   openPicker(ctx.route.query.sheet === "folders");
   if (loading) app.loadSetPricing(c.sid).catch(() => {}).finally(() => { loading = false; paint(); });
   return {

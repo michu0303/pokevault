@@ -4,12 +4,12 @@
 //  - card images (cdn.tcgtracking.com): stale-while-revalidate, so anything
 //    you've viewed loads offline and "Download images" can pre-warm a set
 //  - API calls: network only (prices must be fresh; the catalog lives in IndexedDB)
-const VERSION = "2026-09-13.14";
+const VERSION = "2026-09-13.15";
 const SHELL = "pv-shell-" + VERSION, IMAGES = "pv-images-v1", FONTS = "pv-fonts-v1";
 const SHELL_FILES = [
   "./app.html", "./manifest.webmanifest", "./styles/tokens.css", "./styles/app.css",
   "./icons/icon.svg", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/maskable-512.png", "./icons/apple-touch-icon.png",
-  "./src/main.js", "./src/app.js", "./src/api.js", "./src/catalog.js", "./src/collection.js", "./src/constants.js", "./src/crypto.js",
+  "./src/main.js", "./src/app.js", "./src/api.js", "./src/pricehist.js", "./src/catalog.js", "./src/collection.js", "./src/constants.js", "./src/crypto.js",
   "./src/history.js", "./src/pricing.js", "./src/search.js", "./src/storage.js", "./src/store.js", "./src/sync.js", "./src/util.js",
   "./src/ui/chart.js", "./src/ui/dialog.js", "./src/dev/demo.js", "./src/ui/dom.js", "./src/ui/filters.js", "./src/ui/icons.js", "./src/ui/index.js", "./src/ui/router.js", "./src/ui/sheet.js", "./src/ui/shell.js",
   "./src/ui/screens/cardSheet.js", "./src/ui/screens/collection.js", "./src/ui/screens/home.js", "./src/ui/screens/search.js",
@@ -34,11 +34,13 @@ const isShell = (url) => url.origin === self.location.origin;
 const isImage = (url) => /cdn\.tcgtracking\.com$/.test(url.hostname) || /tcgplayer-cdn/.test(url.hostname);
 const isFont = (url) => /fonts\.(googleapis|gstatic)\.com$/.test(url.hostname);
 const isApi = (url) => /tcgtracking\.com$/.test(url.hostname) && url.pathname.startsWith("/tcgapi/");
+const isHist = (url) => /\/hist\/\d+\.json\.gz$/.test(url.pathname);
 
 self.addEventListener("fetch", (e) => {
   const req = e.request; if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (isApi(url)) return;                                    // always live
+  if (isHist(url)) { e.respondWith(networkFirst("pv-hist-v1", req)); return; }
   if (isImage(url)) { e.respondWith(staleWhileRevalidate(IMAGES, req, true)); return; }
   if (isFont(url)) { e.respondWith(staleWhileRevalidate(FONTS, req)); return; }
   if (isShell(url)) {
@@ -51,6 +53,11 @@ self.addEventListener("fetch", (e) => {
     })());
   }
 });
+async function networkFirst(name, req) {
+  const cache = await caches.open(name);
+  try { const res = await fetch(req); if (res.ok) await cache.put(req, res.clone()); return res; }
+  catch (e) { return (await cache.match(req)) || Response.error(); }
+}
 async function staleWhileRevalidate(name, req, opaqueOk = false) {
   const cache = await caches.open(name);
   const hit = await cache.match(req);

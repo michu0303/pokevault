@@ -1,10 +1,10 @@
 // Application bootstrap: load persisted state, open the catalog, wire sync.
 // UI code subscribes to the store; this module owns the lifecycle only.
-import { CATALOG_URL, CAT } from "./constants.js";
+import { CATALOG_URL, CAT, histUrlFor } from "./constants.js";
 import { loadAll, idbGetAll, idbReplaceCatalog } from "./storage.js";
 import { createStore } from "./store.js";
 import { indexCatalog } from "./catalog.js";
-import { crawlCatalog, loadStaticCatalog, fetchSetDates, fetchSetPricing } from "./api.js";
+import { crawlCatalog, loadStaticCatalog, fetchSetDates, fetchSetPricing, loadPriceHistory } from "./api.js";
 import { applySetPricing } from "./pricing.js";
 import { snapshot } from "./history.js";
 import { createSyncClient, syncConfigured, pickVault, applyVault } from "./sync.js";
@@ -69,6 +69,13 @@ export function createApp({ ls = globalThis.localStorage, idb = globalThis.index
     state.priceCache[sid] = prices;
     store.update((s) => { applySetPricing(s.flatPrices, prices, g); s.pricesAt = Date.now(); }, "flatPrices");
     return prices;
+  }
+  /** server-side price history for a set (session-cached; null when unavailable) */
+  const histCache = new Map();
+  function getPriceHistory(sid) {
+    sid = String(sid);
+    if (!histCache.has(sid)) histCache.set(sid, loadPriceHistory(histUrlFor(catalogUrl, sid), fetchImpl).catch(() => null));
+    return histCache.get(sid);
   }
   /** refresh prices for every set that has an owned or wishlisted card */
   async function refreshValues(onProgress) {
@@ -153,5 +160,5 @@ export function createApp({ ls = globalThis.localStorage, idb = globalThis.index
     return had;
   }
 
-  return { store, state, boot, openCatalog, buildCatalog, loadSetPricing, refreshValues, logSnapshot, initSync, pushNow, connectSync, finishConnect, disconnectSync, offlineImageUrls, warmImages };
+  return { store, state, boot, openCatalog, buildCatalog, loadSetPricing, getPriceHistory, refreshValues, logSnapshot, initSync, pushNow, connectSync, finishConnect, disconnectSync, offlineImageUrls, warmImages };
 }

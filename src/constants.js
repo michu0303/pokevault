@@ -8,6 +8,8 @@ export const CATS = [CAT, CAT_JP];
 // Pre-built catalog published daily by .github/workflows/catalog.yml to the
 // orphan branch `catalog-data`. Set to "" to always crawl the API instead.
 export const CATALOG_URL = "https://raw.githubusercontent.com/michu0303/pokevault/catalog-data/catalog.json.gz";
+/** per-set price history lives next to the catalog: <base>/hist/<setId>.json.gz */
+export const histUrlFor = (catalogUrl, sid) => catalogUrl ? catalogUrl.replace(/[^/]+$/, "hist/" + sid + ".json.gz") : "";
 export const CATALOG_META_URL = "https://raw.githubusercontent.com/michu0303/pokevault/catalog-data/catalog-meta.json";
 
 export const LS = {

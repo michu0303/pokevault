@@ -91,6 +91,14 @@ async function gunzipResponse(res) {
   const stream = new Blob([bytes]).stream().pipeThrough(ds);
   return await new Response(stream).text();
 }
+/** Download one set's price history; null when the server has none yet. */
+export async function loadPriceHistory(url, fetchImpl = globalThis.fetch) {
+  if (!url) return null;
+  let res;
+  try { res = await fetchImpl(url); } catch (e) { return null; }
+  if (!res.ok) return null;
+  try { const doc = JSON.parse(await gunzipResponse(res)); return doc && doc.format === 1 && Array.isArray(doc.days) ? doc : null; } catch (e) { return null; }
+}
 /** Download the pre-built catalog. Resolves the static document, or throws. */
 export async function loadStaticCatalog(url = CATALOG_URL, fetchImpl = globalThis.fetch) {
   if (!url) throw new Error("no static catalog configured");
