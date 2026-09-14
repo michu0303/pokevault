@@ -9,7 +9,7 @@ import { askConfirm } from "../dialog.js";
 
 export function mount(root, ctx) {
   const { state, store, app } = ctx;
-  let refreshing = null, fp = "", warming = null;
+  let refreshing = null, fp = "", warming = null, showPass = false;
   function paint() {
     const m = state.catalogMeta, b = state.build;
     root.innerHTML = `
@@ -27,6 +27,8 @@ export function mount(root, ctx) {
       <div class="card panel"><h3>Cloud sync</h3>${syncPanel()}</div>
       <div class="card panel"><h3>Danger zone</h3><div class="row2"><button class="btn danger" data-action="clear-col">Clear collection</button><button class="btn danger" data-action="clear-wl">Clear wishlist</button></div></div>
       <p class="muted" style="text-align:center;font-size:11.5px;line-height:1.5;padding:0 8px">Card data and prices from the TCGTracking Open TCG API. Not affiliated with Nintendo or The Pokémon Company.</p>`;
+    const pi = $("input[data-f=pass]", root);
+    if (pi) { let t = null; pi.addEventListener("input", () => { clearTimeout(t); t = setTimeout(async () => { const el = $("[data-region=fp]", root); if (!el) return; el.innerHTML = pi.value ? `Fingerprint <b class="num" style="color:var(--strong)">${esc(await passFingerprint(pi.value))}</b> — must match the other device's` : "Fingerprint appears here as you type — it must match the other device's."; }, 150); }); }
     const file = $("[data-region=file]", root);
     file.addEventListener("change", () => { const f = file.files[0]; if (f) importFile(f); file.value = ""; });
   }
@@ -36,12 +38,18 @@ export function mount(root, ctx) {
       const st = state.syncStatus;
       return `<p>Connected to <b>${esc(s.url.replace(/^https?:\/\//, ""))}</b> · passphrase fingerprint <b class="num">${fp || "…"}</b></p>
         <p>${st === "ok" ? "Up to date · synced " + relTime(state.syncedAt) : st === "syncing" ? "Syncing…" : st === "pending" ? "Changes waiting to upload" : st === "error" ? "Problem: " + esc(state.syncError) : state.dirty ? "Unsynced changes on this device" : "Idle"}</p>
-        <div class="row2"><button class="btn ghost" data-action="sync-now">Sync now</button><button class="btn danger" data-action="sync-off">Disconnect</button></div>`;
+        <div class="row2"><button class="btn ghost" data-action="sync-now">Sync now</button><button class="btn danger" data-action="sync-off">Disconnect</button></div>
+        <details><summary class="muted" style="font-size:12.5px;font-weight:700;cursor:pointer;min-height:44px;display:flex;align-items:center">Sync details — copy these to another device</summary>
+          <div class="stack" style="margin-top:8px">
+            <div class="field"><label>Project URL</label><div class="row2"><input readonly value="${esc(s.url)}"><button class="btn ghost sm" data-action="copy" data-v="${esc(s.url)}">Copy</button></div></div>
+            <div class="field"><label>Anon key</label><div class="row2"><input readonly value="${esc(s.key)}"><button class="btn ghost sm" data-action="copy" data-v="${esc(s.key)}">Copy</button></div></div>
+            <div class="field"><label>Passphrase</label><div class="row2"><input readonly type="${showPass ? "text" : "password"}" value="${esc(s.pass)}"><button class="btn ghost sm" data-action="reveal">${showPass ? "Hide" : "Show"}</button></div></div>
+          </div></details>`;
     }
     return `<p>Optional. Encrypted on this device with a passphrase; only ciphertext reaches your own free Supabase project. Use the exact same passphrase on every device — a different one opens a different, empty vault.</p>
       <div class="field"><label>Supabase project URL</label><input data-f="url" placeholder="https://xxxx.supabase.co" autocapitalize="off"></div>
       <div class="field"><label>Anon public key</label><input data-f="key" autocapitalize="off"></div>
-      <div class="field"><label>Passphrase</label><input data-f="pass" type="password"></div>
+      <div class="field"><label>Passphrase</label><input data-f="pass" type="password" autocapitalize="off" autocomplete="off"><span class="muted" style="font-size:12px;font-weight:700" data-region="fp">Fingerprint appears here as you type — it must match the other device's.</span></div>
       <button class="btn" data-action="sync-on">Connect</button>
       <details><summary class="muted" style="font-size:12.5px;font-weight:700;cursor:pointer">One-time Supabase setup</summary><p style="margin-top:8px">1. Create a free project. 2. In the SQL Editor run the snippet below. 3. Copy the Project URL and anon key from Project Settings → API.</p>
       <pre style="font:10.5px/1.5 ui-monospace,Menlo,monospace;background:var(--soft);padding:10px;border-radius:8px;overflow-x:auto">create table if not exists vault (
@@ -85,6 +93,8 @@ notify pgrst, 'reload schema';</pre></details>`;
       } catch (e) { ctx.toast(e.message || "Couldn’t connect"); }
       await loadFp(); paint();
     },
+    copy: async (el) => { try { await navigator.clipboard.writeText(el.dataset.v); ctx.toast("Copied"); } catch (e) { ctx.toast("Couldn’t copy — long-press the field to select it"); } },
+    reveal: () => { showPass = !showPass; paint(); },
     "sync-now": () => app.pushNow().then(() => ctx.toast(state.syncStatus === "ok" ? "Synced" : state.syncError || "Sync failed")),
     "sync-off": async () => { if (await askConfirm({ title: "Stop syncing on this device?", message: "Your collection stays here and the cloud copy is untouched.", ok: "Disconnect", danger: true })) { app.disconnectSync(); paint(); } },
   });
