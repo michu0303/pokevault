@@ -23,7 +23,7 @@ export function mount(root, ctx) {
     const latest = newestSets(state.bySet, state.setDates, 40).filter((s) => { const g = state.bySet.get(String(s.sid)); return g && g.groups.length > 0; }).slice(0, 8);
     const sync = syncConfigured(state.sync) ? (state.syncStatus === "error" ? `<span style="font-size:11px;font-weight:700;color:var(--neg)">Sync issue</span>` : state.syncStatus === "syncing" || state.syncStatus === "pending" ? `<span style="font-size:11px;font-weight:700;color:var(--sec)">Syncing…</span>` : `<span style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--pos-text)">${I.cloud} Synced</span>`) : "";
     root.innerHTML = `
-      <div class="topbar">${I.logo}<h1>PokéVault</h1>${sync}<button class="iconbtn boxed" data-action="settings" aria-label="Settings">${I.gear}</button></div>
+      <div class="topbar sticky">${I.logo}<h1>PokéVault</h1>${sync}<button class="iconbtn boxed" data-action="settings" aria-label="Settings">${I.gear}</button></div>
       ${state.catalog.length ? "" : `<div class="card empty"><b>Welcome!</b><br>Download the card database once, then search any card or track a set.<button class="btn" data-action="settings">Open Settings</button></div>`}
       <div class="card summary hero"><div class="l">Collection worth</div><div class="v num" style="font-size:34px">${money(worth)}</div>
         <div class="s" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${delta ? deltaLine(delta) : `<span>${Object.keys(state.owned).length} products owned</span>`}${state.pricesAt ? `<span style="display:inline-flex;align-items:center;gap:4px">${I.clock.replace('class="ico"', 'class="ico" style="width:13px;height:13px"')} prices ${relTime(state.pricesAt)}</span>` : ""}</div>

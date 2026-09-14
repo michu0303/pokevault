@@ -9,8 +9,8 @@ export function mount(root, ctx) {
   const { state, store } = ctx;
   let seg = "progress", q = "", lang = "all", shown = 60;
   root.innerHTML = `
-    <div class="topbar"><h1>Sets</h1><button class="iconbtn boxed" data-action="settings" aria-label="Settings">${I.gear}</button></div>
-    <div class="sticky"><label class="search">${I.search}<input type="search" placeholder="Find a set to track…" autocomplete="off" autocorrect="off" spellcheck="false"><button class="clear hidden" data-action="clear">Clear</button></label>
+    <div class="topbar sticky"><h1>Sets</h1><button class="iconbtn boxed" data-action="settings" aria-label="Settings">${I.gear}</button></div>
+    <div class="sticky below"><label class="search">${I.search}<input type="search" placeholder="Find a set to track…" autocomplete="off" autocorrect="off" spellcheck="false"><button class="clear hidden" data-action="clear">Clear</button></label>
     <div class="seg" data-region="seg"></div>
     <div class="chips" data-region="lang"></div></div>
     <div class="stack group" data-region="list"></div>`;

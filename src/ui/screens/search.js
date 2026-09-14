@@ -14,8 +14,8 @@ export function mount(root, ctx) {
   const f = state.ui.search;
   let results = [], timer = null, sheet = null, setQ = "";
   root.innerHTML = `
-    <div class="topbar"><h1>Search</h1></div>
-    <div class="sticky"><label class="search">${I.search}<input type="search" placeholder="Card name, set or number…" autocomplete="off" autocorrect="off" spellcheck="false" value="${esc(f.term)}"><button class="clear ${f.term ? "" : "hidden"}" data-action="clear">Clear</button></label>
+    <div class="topbar sticky"><h1>Search</h1></div>
+    <div class="sticky below"><label class="search">${I.search}<input type="search" placeholder="Card name, set or number…" autocomplete="off" autocorrect="off" spellcheck="false" value="${esc(f.term)}"><button class="clear ${f.term ? "" : "hidden"}" data-action="clear">Clear</button></label>
     <div class="sec" data-region="head"></div></div>
     <div data-region="recent"></div>
     <div data-region="results"></div>`;

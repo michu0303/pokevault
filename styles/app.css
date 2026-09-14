@@ -371,3 +371,9 @@ html{scrollbar-gutter:stable}
 /* keyboard focus */
 :focus-visible{outline:2px solid var(--strong);outline-offset:2px}
 input:focus-visible{outline:none}
+
+/* ---- pinned title bars cover the status-bar area; secondary bars tuck under them ---- */
+#screen{padding-top:0}
+.topbar.sticky{top:0;padding-top:calc(env(safe-area-inset-top,0px) + 6px);padding-bottom:6px;z-index:22}
+.sticky.below{top:calc(env(safe-area-inset-top,0px) + 64px);z-index:21}
+.topbar.sticky{min-height:calc(env(safe-area-inset-top,0px) + 64px);box-sizing:border-box}
