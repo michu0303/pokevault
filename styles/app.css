@@ -390,3 +390,9 @@ input:focus-visible{outline:none}
 /* iOS zooms into fields under 16px — keep every text field at 16px */
 input,select,textarea{font-size:16px}
 .search input{font-size:16px}
+
+/* ---- fixed app frame: only the content area scrolls (no document rubber-banding under the nav) ---- */
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;scrollbar-gutter:auto}
+#screen{position:fixed;top:0;left:0;right:0;bottom:calc(var(--nav-h) + var(--sab));overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-gutter:stable;max-width:none;margin:0;padding:0 var(--margin) 16px;min-height:0}
+#screen > *{max-width:640px;width:100%;margin-left:auto;margin-right:auto}
+#screen > .sticky{max-width:none;margin-left:calc(-1 * var(--margin));margin-right:calc(-1 * var(--margin));width:auto;padding-left:max(var(--margin), calc((100% - 640px) / 2));padding-right:max(var(--margin), calc((100% - 640px) / 2))}

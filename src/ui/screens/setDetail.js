@@ -174,7 +174,7 @@ export function mount(root, ctx) {
     route: (r) => {
       // stay where you are on page flips (slider, swipe, arrows); only a section switch jumps to the top
       const jump = (r.query.sec || "") !== (route.query.sec || "");
-      route = r; paint(); if (jump) window.scrollTo(0, 0);
+      route = r; paint(); if (jump) document.getElementById("screen").scrollTo(0, 0);
     },
     update: (changed) => {
       if (changed.has("flatPrices")) { paintProg(); paintBody(); return; }
