@@ -171,7 +171,11 @@ export function mount(root, ctx) {
   paint();
   if (pricesLoading) app.loadSetPricing(sid).catch(() => ctx.toast("Couldn’t load prices — showing cached values")).finally(() => { pricesLoading = false; paint(); });
   return {
-    route: (r) => { route = r; paint(); window.scrollTo(0, 0); },
+    route: (r) => {
+      // stay where you are on page flips (slider, swipe, arrows); only a section switch jumps to the top
+      const jump = (r.query.sec || "") !== (route.query.sec || "");
+      route = r; paint(); if (jump) window.scrollTo(0, 0);
+    },
     update: (changed) => {
       if (changed.has("flatPrices")) { paintProg(); paintBody(); return; }
       if (changed.has("wishlist")) return;
