@@ -71,9 +71,11 @@ export function mountShell(app, screens) {
   window.addEventListener("offline", () => toast("You’re offline — cached cards and prices only"));
   window.addEventListener("online", () => toast("Back online"));
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    navigator.serviceWorker.register("./sw.js").then((reg) => {
-      reg.addEventListener("updatefound", () => { const w = reg.installing; if (!w) return; w.addEventListener("statechange", () => { if (w.state === "installed" && navigator.serviceWorker.controller) toast("Update ready — it loads next time you open PokéVault"); }); });
-    }).catch(() => {});
+    // a new version activates immediately (skipWaiting + claim); reload once so the
+    // page runs the new files instead of waiting for the next visit
+    let hadController = !!navigator.serviceWorker.controller, reloading = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloading) { reloading = true; location.reload(); } hadController = true; });
+    navigator.serviceWorker.register("./sw.js").then((reg) => { reg.update().catch(() => {}); }).catch(() => {});
   }
   return { router, ctx };
 }
