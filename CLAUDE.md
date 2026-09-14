@@ -54,6 +54,8 @@ Design reference (chosen direction "C · Bulbasaur dusk", light + dark, all scre
 - Sync is still last-write-wins (per-key merge is a planned improvement).
 - No news panel (was already dormant).
 - Set detail's rarity dropdown is a native `<select>` styled as a chip.
+- `haptic()` uses `navigator.vibrate`, which iOS Safari does not implement — iPhone users get the press-scale animation only.
+- Long-press (`longPress` in `dom.js`) owns a card from a binder pocket / list row and wishlists a search tile; `toast(msg, { action, onAction })` provides Undo after clearing owned printings.
 
 ---
 

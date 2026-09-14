@@ -48,9 +48,13 @@ export function mountCardSheet(host, ctx, pid) {
         return chase
           ? `<div class="card vrow ${q ? "has" : ""}"><div class="vi"><div class="vn">${esc(shortVariant(v) === "Normal" && vs.length === 1 ? (c.sealed ? "Sealed" : v) : v)}</div><div class="vp num">${sub}${q > 1 ? ` · ${money(p * q)} for ${q}` : ""}</div></div><div class="stepper"><button data-action="dec" data-v="${esc(v)}" aria-label="Remove one">−</button><span class="q num">${q}</span><button data-action="inc" data-v="${esc(v)}" aria-label="Add one">+</button></div></div>`
           : `<div class="card vrow toggle ${q ? "has" : ""}" data-action="tog" data-v="${esc(v)}"><div class="vi"><div class="vn">${esc(v)}</div><div class="vp num">${sub}</div></div><span class="vcheck"><i>${q ? I.check : ""}</i></span></div>`; }).join("")}</div>
-      ${g ? `<button class="btn ghost linkrow" data-action="openset">Open ${esc(g.name)} ${I.chevR}</button>` : ""}`;
+      ${g ? (ctx.route.tab === "sets" && ctx.route.parts[1] === String(c.sid) ? (c.sealed ? "" : `<button class="btn ghost linkrow" data-action="binder">Show in binder ${I.chevR}</button>`) : `<button class="btn ghost linkrow" data-action="openset">Open ${esc(g.name)} ${I.chevR}</button>`) : ""}`;
   }
-  const setq = (v, q) => { haptic(); store.update((s) => setQty(s.owned, c.i, v, q), "owned"); };
+  const setq = (v, n) => {
+    const before = getQty(state.owned, c.i, v);
+    haptic(); store.update((s) => setQty(s.owned, c.i, v, n), "owned");
+    if (before > 0 && n === 0) ctx.toast("Removed from your collection", { action: "Undo", onAction: () => store.update((s) => setQty(s.owned, c.i, v, before), "owned") });
+  };
   const off = delegate(host, {
     close: () => ctx.back(),
     zoom: () => { const z = document.createElement("div"); z.className = "zoom"; z.innerHTML = `<img src="${esc(imgUrl(c, 400).replace(/_400w\./, "_1000w."))}" alt="${esc(c.n)}">`; z.onclick = () => z.remove(); document.body.appendChild(z); },
@@ -60,6 +64,7 @@ export function mountCardSheet(host, ctx, pid) {
     inc: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) + 1),
     dec: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) - 1),
     openset: () => { ctx.go("/sets/" + c.sid); },
+    binder: () => { const g2 = state.bySet.get(String(c.sid)); const idx = g2 ? g2.groups.findIndex((grp) => grp.products.some((p) => String(p.i) === String(c.i))) : -1; ctx.go("/sets/" + c.sid, { view: "binder", page: idx > 8 ? String(Math.floor(idx / 9)) : "" }); },
     crange: (el) => { state.ui.cardRange = el.dataset.v; paint(); },
   });
   // swipe down on the grip / stage closes

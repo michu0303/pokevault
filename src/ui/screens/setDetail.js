@@ -1,7 +1,9 @@
 // Set detail: progress, filters, list view (44px printing checks) and the
 // 3×3 binder. View state lives in the route query so back/forward work.
 import { I } from "../icons.js";
-import { esc, money, delegate, progressRing, haptic, imgTag, imgUrl, displayName, $ } from "../dom.js";
+import { esc, money, delegate, progressRing, haptic, imgTag, imgUrl, displayName, longPress, $ } from "../dom.js";
+import { askText } from "../dialog.js";
+import { quickToggleGroup } from "../../collection.js";
 import { setStats, groupState, ownState, getQty, setQty, ownedTotal, isTracked, toggleSetStar } from "../../collection.js";
 import { groupPrintings, isChaseRarity } from "../../catalog.js";
 import { variantsFor, priceOf, primaryVariant } from "../../pricing.js";
@@ -16,6 +18,8 @@ export function mount(root, ctx) {
   let route = ctx.route;
   const qv = () => ({ view: route.query.view || (state.prefs.binder ? "binder" : "list"), f: route.query.f || "all", r: route.query.r || "", sec: route.query.sec || "cards", page: Math.max(0, parseInt(route.query.page || "0", 10) || 0) });
   let pricesLoading = !state.priceCache[sid];
+  let q = "";                                       // find-in-set (name or number)
+  const matchQ = (grp) => { const t = q.trim().toLowerCase(); if (!t) return true; return grp.name.toLowerCase().includes(t) || String(grp.number || "").toLowerCase().includes(t) || grp.products.some((p) => (p.n || "").toLowerCase().includes(t)); };
   // Black Bolt / White Flare: the user collects only the IR / SIR chase from these two English sets
   const restricted = g.cat !== CAT_JP && /black bolt|white flare/i.test(g.name);
   const vf = (pid) => variantsFor(state.flatPrices, pid, state.owned);
@@ -24,7 +28,7 @@ export function mount(root, ctx) {
     <div class="topbar tight sticky"><button class="iconbtn back" data-action="back" aria-label="Back">${I.back}</button><h1 class="sm">${esc(g.name)}</h1><button class="iconbtn star" data-action="star" aria-label="Track set"></button></div>
     <div class="card prog" data-region="prog"></div>
     ${g.sealed.length ? `<div class="seg secseg" data-region="secseg"></div>` : ""}
-    <div class="filtrow sticky below" data-region="filters"></div>
+    <div class="filtrow sticky below findrow"><label class="search" style="height:44px">${I.search}<input type="search" placeholder="Find in set — name or number" autocomplete="off" autocorrect="off" spellcheck="false" data-region="q"><button class="clear hidden" data-action="clearq">Clear</button></label><div class="filtinner" data-region="filters"></div></div>
     <div data-region="body"></div>`;
 
   function groups() {
@@ -34,6 +38,7 @@ export function mount(root, ctx) {
     if (r) all = all.filter((grp) => grp.products.some((p) => (p.r || "") === r));
     const og = (grp) => groupState(state.owned, state.flatPrices, grp) === "complete";
     if (f === "owned") all = all.filter(og); else if (f === "missing") all = all.filter((grp) => !og(grp));
+    if (q.trim()) all = all.filter(matchQ);
     return all;
   }
   function paintProg() {
@@ -52,6 +57,7 @@ export function mount(root, ctx) {
     const { view, f, r, sec } = qv();
     const ss = $("[data-region=secseg]", root);
     if (ss) ss.innerHTML = `<button class="${sec !== "sealed" ? "on" : ""}" data-action="sec" data-sec="cards">Cards · ${g.groups.length}</button><button class="${sec === "sealed" ? "on" : ""}" data-action="sec" data-sec="sealed">Sealed · ${g.sealed.length}</button>`;
+    $("[data-region=q]", root).placeholder = sec === "sealed" ? "Find a sealed product" : "Find in set — name or number";
     if (sec === "sealed") { $("[data-region=filters]", root).innerHTML = ""; return; }
     const rars = [...new Set(g.cards.map((p) => p.r).filter(Boolean))].sort();
     $("[data-region=filters]", root).innerHTML = `<div class="chips">
@@ -66,13 +72,14 @@ export function mount(root, ctx) {
     const { view, sec, page } = qv();
     const body = $("[data-region=body]", root);
     if (sec === "sealed") {
-      body.innerHTML = `<div class="stack group">${g.sealed.map((p) => { const q = ownedTotal(state.owned, p.i), v = vf(p.i)[0], px = priceOf(state.flatPrices, p.i, v);
+      const sealedList = g.sealed.filter((p) => !q.trim() || (p.n || "").toLowerCase().includes(q.trim().toLowerCase()));
+      body.innerHTML = `<div class="stack group">${sealedList.map((p) => { const q = ownedTotal(state.owned, p.i), v = vf(p.i)[0], px = priceOf(state.flatPrices, p.i, v);
         return `<div class="card crow"><div class="tap" data-action="card" data-pid="${p.i}"><div class="thumb">${imgTag(imgUrl(p), p.n)}</div><div class="info"><div class="nm">${esc(displayName(p))}</div><div class="meta num">${px != null ? money(px) + " each" : "price unavailable"}</div></div></div>
           <div class="stepper"><button data-action="dec" data-pid="${p.i}" data-v="${esc(v)}" aria-label="Remove one">−</button><span class="q num">${q}</span><button data-action="inc" data-pid="${p.i}" data-v="${esc(v)}" aria-label="Add one">+</button></div></div>`; }).join("") || `<div class="empty">No sealed products in this set.</div>`}</div>`;
       return;
     }
     const grs = groups();
-    if (!grs.length) { body.innerHTML = `<div class="empty">${qv().f === "owned" ? "Nothing complete here yet." : qv().f === "missing" ? "<b>Set complete!</b> Nothing missing." : "No cards match."}</div>`; return; }
+    if (!grs.length) { body.innerHTML = `<div class="empty">${q.trim() ? `Nothing in this set matches “${esc(q.trim())}”.` : qv().f === "owned" ? "Nothing complete here yet." : qv().f === "missing" ? "<b>Set complete!</b> Nothing missing." : "No cards match."}</div>`; return; }
     if (view === "list") {
       body.innerHTML = `<div class="stack group">${grs.map((grp) => {
         const base = grp.products[0], chase = grp.products.some((p) => isChaseRarity(p.r));
@@ -90,7 +97,9 @@ export function mount(root, ctx) {
     body.innerHTML = `<div class="binder" data-region="binder">${slice.map((grp) => { const base = grp.products[0], st = groupState(state.owned, state.flatPrices, grp);
         const bp = priceOf(state.flatPrices, base.i, primaryVariant(state.flatPrices, base.i, state.owned));
         return `<div class="pocket ${st === "none" ? "miss" : ""}" data-action="card" data-pid="${base.i}">${imgTag(imgUrl(base), grp.name)}<span class="pno">${esc(grp.number || "")}</span>${bp != null ? `<span class="pp num">${money(bp)}</span>` : ""}${badge(grp)}</div>`; }).join("")}</div>
-      <div class="pager"><button class="iconbtn" data-action="page" data-d="-1" ${pg === 0 ? "disabled" : ""} aria-label="Previous page">${I.back}</button><div class="pagerc"><span class="pg num">Page ${pg + 1} of ${pages}</span><div class="dots">${Array.from({ length: Math.min(pages, 7) }, (_, i) => `<i class="${i === Math.min(pg, 6) ? "on" : ""}"></i>`).join("")}</div></div><button class="iconbtn" data-action="page" data-d="1" ${pg >= pages - 1 ? "disabled" : ""} aria-label="Next page">${I.chevR}</button></div>`;
+      <div class="pager"><button class="iconbtn" data-action="page" data-d="-1" ${pg === 0 ? "disabled" : ""} aria-label="Previous page">${I.back}</button><button class="pg num pgbtn" data-action="jump" aria-label="Go to a page or card number">Page ${pg + 1} of ${pages} ${I.chevD}</button><button class="iconbtn" data-action="page" data-d="1" ${pg >= pages - 1 ? "disabled" : ""} aria-label="Next page">${I.chevR}</button></div>
+      ${pages > 1 ? `<input type="range" class="scrub" min="0" max="${pages - 1}" value="${pg}" aria-label="Binder page" data-region="scrub">` : ""}`;
+    const sc = $("[data-region=scrub]", root); if (sc) sc.addEventListener("change", () => ctx.router.setQuery({ page: sc.value === "0" ? "" : sc.value }));
     // swipe between binder pages
     const b = $("[data-region=binder]", root); let x0 = null;
     b.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; }, { passive: true });
@@ -105,7 +114,24 @@ export function mount(root, ctx) {
     const { f, view } = qv();
     if (view === "binder" || f !== "all") { paintBody(); return; }
   }
-  const setq = (pid, v, q) => { haptic(); store.update((s) => setQty(s.owned, pid, v, q), "owned"); };
+  const setq = (pid, v, n) => {
+    const before = getQty(state.owned, pid, v);
+    haptic(); store.update((s) => setQty(s.owned, pid, v, n), "owned");
+    if (before > 0 && n === 0) ctx.toast("Removed from your collection", { action: "Undo", onAction: () => store.update((s) => setQty(s.owned, pid, v, before), "owned") });
+  };
+  /** long-press a pocket / row: own every printing of the card, or clear it (with undo) */
+  function quickOwn(el) {
+    const grp = g.groups.find((x) => String(x.products[0].i) === String(el.dataset.pid)); if (!grp) return;
+    const before = JSON.stringify(grp.products.map((p) => state.owned[String(p.i)] || null));
+    const wasComplete = groupState(state.owned, state.flatPrices, grp) === "complete";
+    let ok = true; store.update((s) => { ok = quickToggleGroup(s.owned, s.flatPrices, grp); }, "owned");
+    haptic(12);
+    if (!ok) { ctx.toast("This card has counts above one — open it to change them"); return; }
+    if (wasComplete) ctx.toast(`${grp.name} cleared`, { action: "Undo", onAction: () => store.update((s) => { JSON.parse(before).forEach((o, i) => { const pid = String(grp.products[i].i); if (o) s.owned[pid] = o; else delete s.owned[pid]; }); }, "owned") });
+    else ctx.toast(`${grp.name} — every printing owned`);
+  }
+  longPress(root, ".pocket, .lrow .tap", quickOwn);
+  $("[data-region=q]", root).addEventListener("input", (e) => { q = e.target.value; $(".clear", $(".findrow", root)).classList.toggle("hidden", !q); if (qv().page) ctx.router.setQuery({ page: "" }); else paintBody(); });
   const off = delegate(root, {
     back: () => ctx.back(),
     star: () => { haptic(); store.update((s) => toggleSetStar(s, sid), "tracked", "favorites"); ctx.toast(isTracked(state, sid) ? "Tracking " + g.name : "Untracked"); },
@@ -113,7 +139,16 @@ export function mount(root, ctx) {
     f: (el) => ctx.router.setQuery({ f: el.dataset.f === "all" ? "" : el.dataset.f, page: "" }),
     view: (el) => { ctx.router.setQuery({ view: el.dataset.view }); store.update((s) => { s.prefs.binder = el.dataset.view === "binder"; }, "prefs"); },
     page: (el) => flip(+el.dataset.d),
-    card: (el) => ctx.openCard(el.dataset.pid),
+    card: (el) => { if (el.dataset.lp) return; ctx.openCard(el.dataset.pid); },
+    clearq: () => { q = ""; const i = $("[data-region=q]", root); i.value = ""; $(".clear", $(".findrow", root)).classList.add("hidden"); paintBody(); i.focus(); },
+    jump: async () => {
+      const pages = Math.max(1, Math.ceil(groups().length / PAGE));
+      const v = await askText({ title: "Go to", placeholder: `Page 1–${pages}, or a card number like 150`, ok: "Go" }); if (!v) return;
+      const grs = groups(); const byNum = grs.findIndex((grp) => String(grp.number || "").replace(/^0+/, "").split("/")[0] === v.replace(/^#?0*/, "").split("/")[0]);
+      let pg = byNum > -1 ? Math.floor(byNum / PAGE) : parseInt(v, 10) - 1;
+      if (isNaN(pg)) { ctx.toast("Type a page or a card number"); return; }
+      pg = Math.max(0, Math.min(pages - 1, pg)); ctx.router.setQuery({ page: pg ? String(pg) : "" });
+    },
     tog: (el) => setq(el.dataset.pid, el.dataset.v, getQty(state.owned, el.dataset.pid, el.dataset.v) > 0 ? 0 : 1),
     inc: (el) => setq(el.dataset.pid, el.dataset.v, getQty(state.owned, el.dataset.pid, el.dataset.v) + 1),
     dec: (el) => setq(el.dataset.pid, el.dataset.v, getQty(state.owned, el.dataset.pid, el.dataset.v) - 1),
@@ -124,6 +159,7 @@ export function mount(root, ctx) {
     route: (r) => { route = r; paint(); window.scrollTo(0, 0); },
     update: (changed) => {
       if (changed.has("flatPrices")) { paintProg(); paintBody(); return; }
+      if (changed.has("wishlist")) return;
       if (changed.has("owned")) { paintProg(); patchOwned(); }
       if (changed.has("tracked")) paintProg();
     },

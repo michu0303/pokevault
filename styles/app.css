@@ -315,3 +315,24 @@ html{scrollbar-gutter:stable}
 .pocket .pp{position:absolute;left:6px;bottom:6px;font-size:9.5px;font-weight:800;color:#e6ece8;background:rgba(21,32,29,.72);padding:2px 6px;border-radius:6px}
 .pocket.miss .pp{background:var(--faint);color:var(--surface)}
 .lrow .meta b{color:var(--ink);font-weight:800}
+
+/* ---- find-in-set row, binder scrubber, tile hearts, undo toast ---- */
+.findrow{flex-direction:column;align-items:stretch;gap:8px}
+.findrow .filtinner{display:flex;align-items:center;gap:8px}
+.findrow .filtinner .chips{flex:1;min-width:0}
+.pgbtn{background:none;border:0;display:flex;align-items:center;gap:2px;height:44px;padding:0 6px;color:var(--ink)}
+.pgbtn svg{width:16px;height:16px;color:var(--sec)}
+.scrub{-webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent;margin:-6px 0 0}
+.scrub::-webkit-slider-runnable-track{height:6px;border-radius:6px;background:var(--soft)}
+.scrub::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--strong);border:3px solid var(--surface);box-shadow:var(--shadow);margin-top:-10px}
+.scrub::-moz-range-track{height:6px;border-radius:6px;background:var(--soft)}
+.scrub::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--strong);border:3px solid var(--surface)}
+.tile .wl{position:absolute;left:6px;top:6px;width:24px;height:24px;border-radius:50%;background:var(--quick-bg);color:var(--strong);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.tile .wl svg{width:14px;height:14px}
+#toast{display:flex;align-items:center;gap:14px}
+#toast.act{pointer-events:auto;padding-right:8px}
+#toast button{background:none;border:0;color:var(--strong);font-weight:800;font-size:13px;height:36px;padding:0 10px;border-radius:8px}
+:root[data-theme="dark"] #toast button,:root:not([data-theme="light"]).sys-dark #toast button{color:#7fb3aa}
+.pocket,.tile .art{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+#toast button{color:#8fc4b9}
+.filtrow.sticky.findrow{flex-direction:column;align-items:stretch}

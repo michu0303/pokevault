@@ -20,7 +20,7 @@ export function mount(root, ctx) {
     const tracked = Object.keys(state.tracked).map((sid) => state.bySet.get(String(sid))).filter(Boolean)
       .map((g) => ({ g, st: setStats(g, state.owned, state.flatPrices) })).filter((x) => x.st.total && x.st.complete < x.st.total)
       .sort((a, b) => (b.st.complete / b.st.total) - (a.st.complete / a.st.total)).slice(0, 3);
-    const latest = newestSets(state.bySet, state.setDates, 8);
+    const latest = newestSets(state.bySet, state.setDates, 40).filter((s) => { const g = state.bySet.get(String(s.sid)); return g && g.groups.length > 0; }).slice(0, 8);
     const sync = syncConfigured(state.sync) ? (state.syncStatus === "error" ? `<span style="font-size:11px;font-weight:700;color:var(--neg)">Sync issue</span>` : state.syncStatus === "syncing" || state.syncStatus === "pending" ? `<span style="font-size:11px;font-weight:700;color:var(--sec)">Syncing…</span>` : `<span style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--pos-text)">${I.cloud} Synced</span>`) : "";
     root.innerHTML = `
       <div class="topbar">${I.logo}<h1>PokéVault</h1>${sync}<button class="iconbtn boxed" data-action="settings" aria-label="Settings">${I.gear}</button></div>

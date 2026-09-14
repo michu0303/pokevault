@@ -7,10 +7,21 @@ export { esc, money };
 export function displayName(c) { const n = cleanName(c && c.n) || (c && c.n) || ""; const p = patternOf(c && c.n); return p ? n + " · " + p : n; }
 export function haptic(ms = 8) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
 let toastTimer = null;
-export function toast(msg) {
+export function toast(msg, { action, onAction, ms = 2400 } = {}) {
   let t = $("#toast"); if (!t) { t = document.createElement("div"); t.id = "toast"; document.body.appendChild(t); }
-  t.textContent = msg; t.classList.add("show");
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
+  t.innerHTML = `<span>${esc(msg)}</span>${action ? `<button type="button">${esc(action)}</button>` : ""}`;
+  t.classList.toggle("act", !!action); t.classList.add("show");
+  if (action) $("button", t).onclick = () => { t.classList.remove("show"); if (onAction) onAction(); };
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), action ? Math.max(ms, 4500) : ms);
+}
+/** long-press (≈450 ms, cancelled by movement) on elements matching selector inside root */
+export function longPress(root, selector, handler, ms = 450) {
+  let timer = null, el = null, x0 = 0, y0 = 0;
+  const clear = () => { clearTimeout(timer); timer = null; el = null; };
+  root.addEventListener("pointerdown", (e) => { const t = e.target.closest(selector); if (!t || !root.contains(t) || e.button) return; el = t; x0 = e.clientX; y0 = e.clientY; timer = setTimeout(() => { const target = el; clear(); target.dataset.lp = "1"; setTimeout(() => delete target.dataset.lp, 400); handler(target, e); }, ms); });
+  root.addEventListener("pointermove", (e) => { if (timer && (Math.abs(e.clientX - x0) > 8 || Math.abs(e.clientY - y0) > 8)) clear(); });
+  for (const ev of ["pointerup", "pointercancel", "pointerleave"]) root.addEventListener(ev, clear);
+  root.addEventListener("contextmenu", (e) => { if (e.target.closest(selector)) e.preventDefault(); });
 }
 /** delegate data-action clicks inside root to handlers[action](el, ev) */
 export function delegate(root, handlers) {
