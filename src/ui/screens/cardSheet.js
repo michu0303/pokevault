@@ -3,7 +3,7 @@ import { I } from "../icons.js";
 import { esc, money, delegate, haptic, imgUrl, displayName, $ } from "../dom.js";
 import { getQty, setQty, ownedTotal, isWished, toggleWish, cardFolders } from "../../collection.js";
 import { isChaseRarity, patternOf, shortVariant } from "../../catalog.js";
-import { variantsFor, priceOf, primaryVariant } from "../../pricing.js";
+import { variantsFor, priceOf, primaryVariant, priceDetail } from "../../pricing.js";
 import { productSeries, rangeSeries } from "../../history.js";
 import { lineChart, seriesDelta, rangeChips, deltaLine } from "../chart.js";
 import { CAT_JP } from "../../constants.js";
@@ -25,6 +25,8 @@ export function mountCardSheet(host, ctx, pid) {
     const g = state.bySet.get(String(c.sid));
     const vs = variantsFor(state.flatPrices, c.i, state.owned), pv = primaryVariant(state.flatPrices, c.i, state.owned), px = priceOf(state.flatPrices, c.i, pv);
     const owned = ownedTotal(state.owned, c.i), chase = c.sealed || isChaseRarity(c.r);
+    const raw = state.priceCache[String(c.sid)];
+    const det = priceDetail(raw, c.i, pv);
     const range = state.ui.cardRange || "30";
     const series = rangeSeries(productSeries(state.history, c.i), +range);
     const delta = seriesDelta(series);
@@ -36,12 +38,14 @@ export function mountCardSheet(host, ctx, pid) {
       <div class="title"><h3>${esc(displayName(c))}</h3>
         <button class="iconbtn boxed ${wished ? "on" : ""}" data-action="wish" aria-label="${wished ? "Remove from wishlist" : "Add to wishlist"}">${wished ? I.heartF : I.heart}</button>
         <button class="iconbtn boxed ${folders.length ? "on" : ""}" data-action="folders" aria-label="Wishlist folders">${I.folder}</button></div>
-      <div class="card pricebox" style="flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><div class="pv num">${loading ? "…" : money(px)}</div><div class="pl">${loading ? "Loading prices" : px == null ? "No market price" : "Market · " + esc(pv)}</div></div>
+      <div class="card pricebox" style="flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><div class="pv num">${loading ? "…" : money(px)}</div><div class="pl">${loading ? "Loading prices" : px == null ? "No market price" : "Market · " + esc(pv) + (det && det.low != null ? ` · Low ${money(det.low)}` : "") + (det && det.high != null ? ` · High ${money(det.high)}` : "")}</div></div>
         ${series.length > 1 ? `<div class="pl">${deltaLine(delta)}</div>${lineChart(series, { h: 110 })}${rangeChips(range, "crange")}` : `<div class="pl">Price history builds up one point per day while this card is owned or wishlisted.</div>`}</div>
-      <div class="stack">${vs.map((v) => { const q = getQty(state.owned, c.i, v), p = priceOf(state.flatPrices, c.i, v);
+      ${vs.length > 1 ? `<div class="sec"><h2>Printings</h2></div>` : ""}
+      <div class="stack group">${vs.map((v) => { const q = getQty(state.owned, c.i, v), p = priceOf(state.flatPrices, c.i, v), d = priceDetail(raw, c.i, v);
+        const sub = p != null ? money(p) + (d && d.low != null && d.low !== p ? " · low " + money(d.low) : "") : "price unavailable";
         return chase
-          ? `<div class="card vrow ${q ? "has" : ""}"><div class="vi"><div class="vn">${esc(shortVariant(v) === "Normal" && vs.length === 1 ? (c.sealed ? "Sealed" : v) : v)}</div><div class="vp num">${p != null ? money(p) + " each" : "price unavailable"}</div></div><div class="stepper"><button data-action="dec" data-v="${esc(v)}" aria-label="Remove one">−</button><span class="q num">${q}</span><button data-action="inc" data-v="${esc(v)}" aria-label="Add one">+</button></div></div>`
-          : `<div class="card vrow toggle ${q ? "has" : ""}" data-action="tog" data-v="${esc(v)}"><div class="vi"><div class="vn">${esc(v)}</div><div class="vp num">${p != null ? money(p) : "price unavailable"}</div></div><span class="vcheck"><i>${q ? I.check : ""}</i></span></div>`; }).join("")}</div>
+          ? `<div class="card vrow ${q ? "has" : ""}"><div class="vi"><div class="vn">${esc(shortVariant(v) === "Normal" && vs.length === 1 ? (c.sealed ? "Sealed" : v) : v)}</div><div class="vp num">${sub}${q > 1 ? ` · ${money(p * q)} for ${q}` : ""}</div></div><div class="stepper"><button data-action="dec" data-v="${esc(v)}" aria-label="Remove one">−</button><span class="q num">${q}</span><button data-action="inc" data-v="${esc(v)}" aria-label="Add one">+</button></div></div>`
+          : `<div class="card vrow toggle ${q ? "has" : ""}" data-action="tog" data-v="${esc(v)}"><div class="vi"><div class="vn">${esc(v)}</div><div class="vp num">${sub}</div></div><span class="vcheck"><i>${q ? I.check : ""}</i></span></div>`; }).join("")}</div>
       ${g ? `<button class="btn ghost linkrow" data-action="openset">Open ${esc(g.name)} ${I.chevR}</button>` : ""}`;
   }
   const setq = (v, q) => { haptic(); store.update((s) => setQty(s.owned, c.i, v, q), "owned"); };

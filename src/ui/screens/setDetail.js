@@ -4,7 +4,7 @@ import { I } from "../icons.js";
 import { esc, money, delegate, progressRing, haptic, imgTag, imgUrl, displayName, $ } from "../dom.js";
 import { setStats, groupState, ownState, getQty, setQty, ownedTotal, isTracked, toggleSetStar } from "../../collection.js";
 import { groupPrintings, isChaseRarity } from "../../catalog.js";
-import { variantsFor, priceOf } from "../../pricing.js";
+import { variantsFor, priceOf, primaryVariant } from "../../pricing.js";
 import { CAT_JP } from "../../constants.js";
 
 const PAGE = 9;
@@ -80,14 +80,16 @@ export function mount(root, ctx) {
         const togs = chase
           ? grp.products.map((p) => { const v = vf(p.i)[0], q = getQty(state.owned, p.i, v); return `<div class="stepper"><button data-action="dec" data-pid="${p.i}" data-v="${esc(v)}" aria-label="Remove one">−</button><span class="q num">${q}</span><button data-action="inc" data-pid="${p.i}" data-v="${esc(v)}" aria-label="Add one">+</button></div>`; }).join("")
           : printings.map((pr) => { const on = getQty(state.owned, pr.pid, pr.variant) > 0; return `<button class="vtog ${on ? "on" : ""}" data-action="tog" data-pid="${pr.pid}" data-v="${esc(pr.variant)}" aria-label="${esc(pr.label)} ${on ? "owned" : "not owned"}"><span class="c">${on ? I.check : ""}</span><span class="l">${esc(pr.label.replace(/^Master Ball$/, "Master"))}</span></button>`; }).join("");
-        return `<div class="card lrow"><div class="tap" data-action="card" data-pid="${base.i}"><div class="thumb">${imgTag(imgUrl(base), grp.name)}</div><div class="info"><div class="nm">${esc(grp.name)}</div><div class="meta">#${esc(grp.number || "—")}${base.r ? " · " + esc(base.r) : ""}</div></div></div><div class="togs">${togs}</div></div>`;
+        const bp = priceOf(state.flatPrices, base.i, primaryVariant(state.flatPrices, base.i, state.owned));
+        return `<div class="card lrow"><div class="tap" data-action="card" data-pid="${base.i}"><div class="thumb">${imgTag(imgUrl(base), grp.name)}</div><div class="info"><div class="nm">${esc(grp.name)}</div><div class="meta">#${esc(grp.number || "—")}${base.r ? " · " + esc(base.r) : ""}${bp != null ? ` · <b class="num" data-price="${base.i}">${money(bp)}</b>` : `<b class="num" data-price="${base.i}"></b>`}</div></div></div><div class="togs">${togs}</div></div>`;
       }).join("")}</div>`;
       return;
     }
     const pages = Math.max(1, Math.ceil(grs.length / PAGE)), pg = Math.min(page, pages - 1);
     const slice = grs.slice(pg * PAGE, pg * PAGE + PAGE);
     body.innerHTML = `<div class="binder" data-region="binder">${slice.map((grp) => { const base = grp.products[0], st = groupState(state.owned, state.flatPrices, grp);
-        return `<div class="pocket ${st === "none" ? "miss" : ""}" data-action="card" data-pid="${base.i}">${imgTag(imgUrl(base), grp.name)}<span class="num">${esc(grp.number || "")}</span>${badge(grp)}</div>`; }).join("")}</div>
+        const bp = priceOf(state.flatPrices, base.i, primaryVariant(state.flatPrices, base.i, state.owned));
+        return `<div class="pocket ${st === "none" ? "miss" : ""}" data-action="card" data-pid="${base.i}">${imgTag(imgUrl(base), grp.name)}<span class="pno">${esc(grp.number || "")}</span>${bp != null ? `<span class="pp num">${money(bp)}</span>` : ""}${badge(grp)}</div>`; }).join("")}</div>
       <div class="pager"><button class="iconbtn" data-action="page" data-d="-1" ${pg === 0 ? "disabled" : ""} aria-label="Previous page">${I.back}</button><div class="pagerc"><span class="pg num">Page ${pg + 1} of ${pages}</span><div class="dots">${Array.from({ length: Math.min(pages, 7) }, (_, i) => `<i class="${i === Math.min(pg, 6) ? "on" : ""}"></i>`).join("")}</div></div><button class="iconbtn" data-action="page" data-d="1" ${pg >= pages - 1 ? "disabled" : ""} aria-label="Next page">${I.chevR}</button></div>`;
     // swipe between binder pages
     const b = $("[data-region=binder]", root); let x0 = null;

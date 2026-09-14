@@ -69,6 +69,12 @@ export function priceOf(flatPrices, pid, variant) {
   if (!vp) return null;
   return vp[variant] != null ? vp[variant] : null;
 }
+/** low / market for one printing from a raw set pricing response (session cache) */
+export function priceDetail(rawSetPrices, pid, variant) {
+  const t = rawSetPrices && rawSetPrices[String(pid)] && rawSetPrices[String(pid)].tcg;
+  const o = t && t[variant];
+  return o && typeof o === "object" ? { low: o.low != null ? o.low : null, market: o.market != null ? o.market : null, mid: o.mid != null ? o.mid : null, high: o.high != null ? o.high : null } : null;
+}
 /** keep only the prices for products we care about (owned + wishlisted) */
 export function prunePrices(flatPrices, owned, wishlist) {
   const sub = {};

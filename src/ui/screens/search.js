@@ -20,7 +20,14 @@ export function mount(root, ctx) {
     <div data-region="recent"></div>
     <div data-region="results"></div>`;
   const input = $("input", root);
-  const run = () => { results = f.term.trim() ? searchCatalog(state.catalog, f.term) : []; paint(); };
+  let warmToken = 0;
+  /** fetch prices for the sets of the first results so tiles show real numbers */
+  async function warmPrices(list) {
+    const token = ++warmToken;
+    const sids = [...new Set(list.slice(0, 36).map((c) => String(c.sid)))].filter((sid) => !state.priceCache[sid]).slice(0, 6);
+    for (const sid of sids) { if (token !== warmToken) return; try { await app.loadSetPricing(sid); } catch (e) {} }
+  }
+  const run = () => { results = f.term.trim() ? searchCatalog(state.catalog, f.term) : []; paint(); if (results.length) warmPrices(applySort(applyFilters(results, f, state), f.sort, state)); };
   function paintRecent() {
     const r = $("[data-region=recent]", root);
     if (f.term.trim() || !state.prefs.recent.length) { r.innerHTML = ""; return; }
@@ -44,6 +51,7 @@ export function mount(root, ctx) {
       <button class="quick ${st !== "none" ? "on" : ""}" data-action="quick" data-pid="${c.i}" aria-label="${st !== "none" ? "Owned — tap to clear" : "Mark owned"}"><i>${st !== "none" ? I.check : I.plus}</i></button></div>`;
   }
   function patchOwned() { for (const b of root.querySelectorAll(".quick")) { const st = ownState(state.owned, state.flatPrices, b.dataset.pid); b.classList.toggle("on", st !== "none"); $("i", b).innerHTML = st !== "none" ? I.check : I.plus; } }
+  function patchPrices() { for (const t of root.querySelectorAll(".tile")) { const pid = $(".art", t).dataset.pid; const px = priceOf(state.flatPrices, pid, primaryVariant(state.flatPrices, pid, state.owned)); $(".pr", t).textContent = px != null ? money(px) : "—"; } }
   function remember(t) { t = t.trim(); if (!t) return; store.update((s) => { s.prefs.recent = [t, ...s.prefs.recent.filter((x) => x.toLowerCase() !== t.toLowerCase())].slice(0, 6); }, "prefs"); }
   input.addEventListener("input", () => { f.term = input.value; clearTimeout(timer); timer = setTimeout(run, 120); });
   input.addEventListener("change", () => remember(input.value));
@@ -74,7 +82,7 @@ export function mount(root, ctx) {
   if (!f.term) setTimeout(() => input.focus(), 50);
   return {
     route: (r) => openSheet(r.query.sheet),
-    update: (changed) => { if (changed.has("owned")) patchOwned(); if (changed.has("flatPrices")) paint(); if (changed.has("prefs")) paintRecent(); },
+    update: (changed) => { if (changed.has("owned")) patchOwned(); if (changed.has("flatPrices")) { if (f.sort.startsWith("val")) paint(); else patchPrices(); } if (changed.has("prefs")) paintRecent(); },
     unmount: () => { off(); if (sheet) sheet.unmount(); },
   };
 }
