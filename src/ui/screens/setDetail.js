@@ -9,13 +9,14 @@ import { groupPrintings, isChaseRarity } from "../../catalog.js";
 import { variantsFor, priceOf, primaryVariant } from "../../pricing.js";
 import { CAT_JP } from "../../constants.js";
 
-const PAGE = 9;
+const PAGE_OF = (cols) => (cols === 4 ? 12 : 9);   // 3×3 or 4×3 pockets per binder page
 export function mount(root, ctx) {
   const { state, store, app } = ctx;
   const sid = String(ctx.route.parts[1] || "");
   const g = state.bySet.get(sid);
   if (!g) { root.innerHTML = `<div class="topbar tight"><button class="iconbtn back" data-action="back">${I.back}</button><h1 class="sm">Set</h1></div><div class="empty">This set isn't in the local catalog.</div>`; delegate(root, { back: () => ctx.back() }); return {}; }
   let route = ctx.route;
+  const PAGE = () => PAGE_OF(state.prefs.cols);
   const qv = () => ({ view: route.query.view || (state.prefs.binder ? "binder" : "list"), f: route.query.f || "all", r: route.query.r || "", sec: route.query.sec || "cards", page: Math.max(0, parseInt(route.query.page || "0", 10) || 0) });
   let pricesLoading = !state.priceCache[sid];
   let q = "";                                       // find-in-set (name or number)
@@ -64,7 +65,8 @@ export function mount(root, ctx) {
         ${[["all", "All"], ["owned", "Owned"], ["missing", "Missing"]].map(([k, l]) => `<button class="chip ${f === k ? "on" : ""}" data-action="f" data-f="${k}">${l}</button>`).join("")}
         <span class="chip dd fdrop">${esc(r || "All rarities")} ${I.chevD}<select data-action="rarity" aria-label="Rarity"><option value="">All rarities</option>${rars.map((x) => `<option ${x === r ? "selected" : ""}>${esc(x)}</option>`).join("")}</select></span>
       </div>
-      <div class="seg compact icons"><button class="${view === "list" ? "on" : ""}" data-action="view" data-view="list" aria-label="List">${I.list}</button><button class="${view === "binder" ? "on" : ""}" data-action="view" data-view="binder" aria-label="Binder">${I.grid}</button></div>`;
+      <div class="seg compact icons"><button class="${view === "list" ? "on" : ""}" data-action="view" data-view="list" aria-label="List">${I.list}</button><button class="${view === "binder" ? "on" : ""}" data-action="view" data-view="binder" aria-label="Binder">${I.grid}</button></div>
+      ${view === "binder" ? `<div class="seg compact"><button class="${state.prefs.cols !== 4 ? "on" : ""}" data-action="cols" data-cols="3" aria-label="3 by 3 pockets">3×3</button><button class="${state.prefs.cols === 4 ? "on" : ""}" data-action="cols" data-cols="4" aria-label="4 by 3 pockets">4×3</button></div>` : ""}`;
     $("select", root).addEventListener("change", (e) => ctx.router.setQuery({ r: e.target.value, page: "" }));
   }
   const badge = (grp) => { const s = groupState(state.owned, state.flatPrices, grp); return `<span class="badge ${s === "complete" ? "full" : s === "partial" ? "part" : ""}">${s === "complete" ? I.check : s === "partial" ? I.dash : I.plus}</span>`; };
@@ -92,12 +94,12 @@ export function mount(root, ctx) {
       }).join("")}</div>`;
       return;
     }
-    const pages = Math.max(1, Math.ceil(grs.length / PAGE)), pg = Math.min(page, pages - 1);
-    const pocketsHtml = (p) => grs.slice(p * PAGE, p * PAGE + PAGE).map((grp) => { const base = grp.products[0], st = groupState(state.owned, state.flatPrices, grp);
+    const PER = PAGE(), pages = Math.max(1, Math.ceil(grs.length / PER)), pg = Math.min(page, pages - 1);
+    const pocketsHtml = (p) => grs.slice(p * PER, p * PER + PER).map((grp) => { const base = grp.products[0], st = groupState(state.owned, state.flatPrices, grp);
         const bp = priceOf(state.flatPrices, base.i, primaryVariant(state.flatPrices, base.i, state.owned));
         return `<div class="pocket ${st === "none" ? "miss" : ""}" data-action="card" data-pid="${base.i}">${imgTag(imgUrl(base), grp.name)}<span class="pno">${esc(grp.number || "")}</span>${bp != null ? `<span class="pp num">${money(bp)}</span>` : ""}${badge(grp)}</div>`; }).join("");
     const pagerHtml = (p) => `<button class="iconbtn" data-action="page" data-d="-1" ${p === 0 ? "disabled" : ""} aria-label="Previous page">${I.back}</button><button class="pg num pgbtn" data-action="jump" aria-label="Go to a page or card number">Page ${p + 1} of ${pages} ${I.chevD}</button><button class="iconbtn" data-action="page" data-d="1" ${p >= pages - 1 ? "disabled" : ""} aria-label="Next page">${I.chevR}</button>`;
-    body.innerHTML = `<div class="binder" data-region="binder">${pocketsHtml(pg)}</div>
+    body.innerHTML = `<div class="binder ${state.prefs.cols === 4 ? "c4" : ""}" data-region="binder">${pocketsHtml(pg)}</div>
       <div class="pager" data-region="pager">${pagerHtml(pg)}</div>
       ${pages > 1 ? `<input type="range" class="scrub" min="0" max="${pages - 1}" value="${pg}" aria-label="Binder page" data-region="scrub">` : ""}`;
     const sc = $("[data-region=scrub]", root);
@@ -111,7 +113,7 @@ export function mount(root, ctx) {
     b.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; }, { passive: true });
     b.addEventListener("touchend", (e) => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 60) flip(dx < 0 ? 1 : -1); }, { passive: true });
   }
-  function flip(d) { const { page } = qv(); const pages = Math.max(1, Math.ceil(groups().length / PAGE)); const np = Math.max(0, Math.min(pages - 1, page + d)); if (np !== page) { ctx.router.setQuery({ page: np ? String(np) : "" }); } }
+  function flip(d) { const { page } = qv(); const pages = Math.max(1, Math.ceil(groups().length / PAGE())); const np = Math.max(0, Math.min(pages - 1, page + d)); if (np !== page) { ctx.router.setQuery({ page: np ? String(np) : "" }); } }
   function paint() { paintProg(); paintFilters(); paintBody(); }
   /** ownership changed: patch checks, steppers and badges in place (no image reloads, no lost scroll) */
   function patchOwned() {
@@ -144,14 +146,20 @@ export function mount(root, ctx) {
     sec: (el) => ctx.router.setQuery({ sec: el.dataset.sec === "cards" ? "" : "sealed", page: "" }),
     f: (el) => ctx.router.setQuery({ f: el.dataset.f === "all" ? "" : el.dataset.f, page: "" }),
     view: (el) => { ctx.router.setQuery({ view: el.dataset.view }); store.update((s) => { s.prefs.binder = el.dataset.view === "binder"; }, "prefs"); },
+    cols: (el) => {
+      // keep the first visible card on screen when the page size changes
+      const { page } = qv(); const firstIdx = page * PAGE(); const cols = +el.dataset.cols;
+      store.update((s) => { s.prefs.cols = cols; }, "prefs");
+      const np = Math.floor(firstIdx / PAGE_OF(cols)); ctx.router.setQuery({ page: np ? String(np) : "" }); paintFilters(); paintBody();
+    },
     page: (el) => flip(+el.dataset.d),
     card: (el) => { if (el.dataset.lp) return; ctx.openCard(el.dataset.pid); },
     clearq: () => { q = ""; const i = $("[data-region=q]", root); i.value = ""; $(".clear", $(".findrow", root)).classList.add("hidden"); paintBody(); i.focus(); },
     jump: async () => {
-      const pages = Math.max(1, Math.ceil(groups().length / PAGE));
+      const pages = Math.max(1, Math.ceil(groups().length / PAGE()));
       const v = await askText({ title: "Go to", placeholder: `Page 1–${pages}, or a card number like 150`, ok: "Go" }); if (!v) return;
       const grs = groups(); const byNum = grs.findIndex((grp) => String(grp.number || "").replace(/^0+/, "").split("/")[0] === v.replace(/^#?0*/, "").split("/")[0]);
-      let pg = byNum > -1 ? Math.floor(byNum / PAGE) : parseInt(v, 10) - 1;
+      let pg = byNum > -1 ? Math.floor(byNum / PAGE()) : parseInt(v, 10) - 1;
       if (isNaN(pg)) { ctx.toast("Type a page or a card number"); return; }
       pg = Math.max(0, Math.min(pages - 1, pg)); ctx.router.setQuery({ page: pg ? String(pg) : "" });
     },

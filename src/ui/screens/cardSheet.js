@@ -64,7 +64,7 @@ export function mountCardSheet(host, ctx, pid) {
     inc: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) + 1),
     dec: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) - 1),
     openset: () => { ctx.go("/sets/" + c.sid); },
-    binder: () => { const g2 = state.bySet.get(String(c.sid)); const idx = g2 ? g2.groups.findIndex((grp) => grp.products.some((p) => String(p.i) === String(c.i))) : -1; ctx.go("/sets/" + c.sid, { view: "binder", page: idx > 8 ? String(Math.floor(idx / 9)) : "" }); },
+    binder: () => { const g2 = state.bySet.get(String(c.sid)); const per = state.prefs.cols === 4 ? 12 : 9; const idx = g2 ? g2.groups.findIndex((grp) => grp.products.some((p) => String(p.i) === String(c.i))) : -1; const pg = idx >= per ? Math.floor(idx / per) : 0; ctx.go("/sets/" + c.sid, { view: "binder", page: pg ? String(pg) : "" }); },
     crange: (el) => { state.ui.cardRange = el.dataset.v; paint(); },
   });
   // swipe down on the grip / stage closes

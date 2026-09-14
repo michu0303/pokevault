@@ -4,7 +4,7 @@
 import { LS, IDB_NAME, IDB_STORE } from "./constants.js";
 import { normFolders } from "./collection.js";
 
-const DEFAULT_PREFS = { binder: true, cols: 4, setSort: "az", colRarity: "", colPerPage: 30, theme: "system", recent: [] };
+const DEFAULT_PREFS = { binder: true, cols: 3, setSort: "az", colRarity: "", colPerPage: 30, theme: "system", recent: [] };
 
 export function readJSON(ls, k) { try { return JSON.parse(ls.getItem(k)); } catch (e) { return null; } }
 export function writeJSON(ls, k, v) { try { ls.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
@@ -13,7 +13,7 @@ export function normalizePrefs(pf) {
   const p = { ...DEFAULT_PREFS };
   if (pf && typeof pf === "object") {
     p.binder = pf.binder !== false;
-    p.cols = pf.cols === 3 ? 3 : 4;
+    p.cols = pf.cols === 4 ? 4 : 3;                 // binder: 3×3 (default) or 4×3
     p.setSort = ["az", "new", "old"].includes(pf.setSort) ? pf.setSort : "az";
     p.colRarity = typeof pf.colRarity === "string" ? pf.colRarity : "";
     p.colPerPage = [10, 20, 30, 50, 100].includes(pf.colPerPage) ? pf.colPerPage : 30;
