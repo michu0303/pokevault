@@ -336,3 +336,5 @@ html{scrollbar-gutter:stable}
 .pocket,.tile .art{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
 #toast button{color:#8fc4b9}
 .filtrow.sticky.findrow{flex-direction:column;align-items:stretch}
+
+.topbar.tight,.topbar.sticky.tight{gap:10px}

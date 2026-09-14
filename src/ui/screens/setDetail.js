@@ -93,13 +93,19 @@ export function mount(root, ctx) {
       return;
     }
     const pages = Math.max(1, Math.ceil(grs.length / PAGE)), pg = Math.min(page, pages - 1);
-    const slice = grs.slice(pg * PAGE, pg * PAGE + PAGE);
-    body.innerHTML = `<div class="binder" data-region="binder">${slice.map((grp) => { const base = grp.products[0], st = groupState(state.owned, state.flatPrices, grp);
+    const pocketsHtml = (p) => grs.slice(p * PAGE, p * PAGE + PAGE).map((grp) => { const base = grp.products[0], st = groupState(state.owned, state.flatPrices, grp);
         const bp = priceOf(state.flatPrices, base.i, primaryVariant(state.flatPrices, base.i, state.owned));
-        return `<div class="pocket ${st === "none" ? "miss" : ""}" data-action="card" data-pid="${base.i}">${imgTag(imgUrl(base), grp.name)}<span class="pno">${esc(grp.number || "")}</span>${bp != null ? `<span class="pp num">${money(bp)}</span>` : ""}${badge(grp)}</div>`; }).join("")}</div>
-      <div class="pager"><button class="iconbtn" data-action="page" data-d="-1" ${pg === 0 ? "disabled" : ""} aria-label="Previous page">${I.back}</button><button class="pg num pgbtn" data-action="jump" aria-label="Go to a page or card number">Page ${pg + 1} of ${pages} ${I.chevD}</button><button class="iconbtn" data-action="page" data-d="1" ${pg >= pages - 1 ? "disabled" : ""} aria-label="Next page">${I.chevR}</button></div>
+        return `<div class="pocket ${st === "none" ? "miss" : ""}" data-action="card" data-pid="${base.i}">${imgTag(imgUrl(base), grp.name)}<span class="pno">${esc(grp.number || "")}</span>${bp != null ? `<span class="pp num">${money(bp)}</span>` : ""}${badge(grp)}</div>`; }).join("");
+    const pagerHtml = (p) => `<button class="iconbtn" data-action="page" data-d="-1" ${p === 0 ? "disabled" : ""} aria-label="Previous page">${I.back}</button><button class="pg num pgbtn" data-action="jump" aria-label="Go to a page or card number">Page ${p + 1} of ${pages} ${I.chevD}</button><button class="iconbtn" data-action="page" data-d="1" ${p >= pages - 1 ? "disabled" : ""} aria-label="Next page">${I.chevR}</button>`;
+    body.innerHTML = `<div class="binder" data-region="binder">${pocketsHtml(pg)}</div>
+      <div class="pager" data-region="pager">${pagerHtml(pg)}</div>
       ${pages > 1 ? `<input type="range" class="scrub" min="0" max="${pages - 1}" value="${pg}" aria-label="Binder page" data-region="scrub">` : ""}`;
-    const sc = $("[data-region=scrub]", root); if (sc) sc.addEventListener("change", () => ctx.router.setQuery({ page: sc.value === "0" ? "" : sc.value }));
+    const sc = $("[data-region=scrub]", root);
+    if (sc) {
+      // live while dragging: repaint pockets + label only (the slider itself stays put); commit to the URL on release
+      sc.addEventListener("input", () => { const p = +sc.value; $("[data-region=binder]", root).innerHTML = pocketsHtml(p); $("[data-region=pager]", root).innerHTML = pagerHtml(p); });
+      sc.addEventListener("change", () => ctx.router.setQuery({ page: sc.value === "0" ? "" : sc.value }));
+    }
     // swipe between binder pages
     const b = $("[data-region=binder]", root); let x0 = null;
     b.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; }, { passive: true });
