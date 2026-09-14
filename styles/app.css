@@ -387,3 +387,6 @@ input:focus-visible{outline:none}
 .pager{justify-content:flex-start;gap:4px}
 .pager .pgbtn{margin-right:auto}
 .sheet{max-height:calc(100dvh - var(--sat) - 20px)}
+/* iOS zooms into fields under 16px — keep every text field at 16px */
+input,select,textarea{font-size:16px}
+.search input{font-size:16px}
