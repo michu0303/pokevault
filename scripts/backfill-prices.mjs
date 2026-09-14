@@ -31,7 +31,7 @@ const work = mkdtempSync(join(tmpdir(), "pvbf-"));
 let ok = 0, missing = 0;
 for (const day of days) {
   const url = `https://tcgcsv.com/archive/tcgplayer/prices-${day}.ppmd.7z`, file = join(work, "a.7z");
-  const res = await fetch(url);
+  const res = await fetch(url, { headers: { "User-Agent": "PokeVault price backfill (github.com/michu0303/pokevault)" } });   // tcgcsv rejects UA-less requests
   if (!res.ok) { missing++; continue; }
   writeFileSync(file, Buffer.from(await res.arrayBuffer()));
   const out = join(work, "x"); rmSync(out, { recursive: true, force: true });
