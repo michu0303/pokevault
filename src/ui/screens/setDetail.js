@@ -125,7 +125,7 @@ export function mount(root, ctx) {
   const setq = (pid, v, n) => {
     const before = getQty(state.owned, pid, v);
     haptic(); store.update((s) => setQty(s.owned, pid, v, n), "owned");
-    if (before > 0 && n === 0) ctx.toast("Removed from your collection", { action: "Undo", onAction: () => store.update((s) => setQty(s.owned, pid, v, before), "owned") });
+    if (before > 0 && n === 0) ctx.toast(before > 1 ? `Removed all ${before} copies` : "Removed from your collection", { action: "Undo", onAction: () => store.update((s) => setQty(s.owned, pid, v, before), "owned") });
   };
   /** long-press a pocket / row: own every printing of the card, or clear it (with undo) */
   function quickOwn(el) {
@@ -163,7 +163,7 @@ export function mount(root, ctx) {
       if (isNaN(pg)) { ctx.toast("Type a page or a card number"); return; }
       pg = Math.max(0, Math.min(pages - 1, pg)); ctx.router.setQuery({ page: pg ? String(pg) : "" });
     },
-    tog: (el) => { const q = getQty(state.owned, el.dataset.pid, el.dataset.v); if (q > 1) { ctx.toast(`You own ${q} — change the count from Collection`, { action: "Open", onAction: () => ctx.openCard(el.dataset.pid) }); return; } setq(el.dataset.pid, el.dataset.v, q > 0 ? 0 : 1); },
+    tog: (el) => { const q = getQty(state.owned, el.dataset.pid, el.dataset.v); setq(el.dataset.pid, el.dataset.v, q > 0 ? 0 : 1); },
     inc: (el) => setq(el.dataset.pid, el.dataset.v, getQty(state.owned, el.dataset.pid, el.dataset.v) + 1),
     dec: (el) => setq(el.dataset.pid, el.dataset.v, getQty(state.owned, el.dataset.pid, el.dataset.v) - 1),
   });

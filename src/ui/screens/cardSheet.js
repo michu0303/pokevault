@@ -55,14 +55,14 @@ export function mountCardSheet(host, ctx, pid) {
   const setq = (v, n) => {
     const before = getQty(state.owned, c.i, v);
     haptic(); store.update((s) => setQty(s.owned, c.i, v, n), "owned");
-    if (before > 0 && n === 0) ctx.toast("Removed from your collection", { action: "Undo", onAction: () => store.update((s) => setQty(s.owned, c.i, v, before), "owned") });
+    if (before > 0 && n === 0) ctx.toast(before > 1 ? `Removed all ${before} copies` : "Removed from your collection", { action: "Undo", onAction: () => store.update((s) => setQty(s.owned, c.i, v, before), "owned") });
   };
   const off = delegate(host, {
     close: () => ctx.back(),
     zoom: () => { const z = document.createElement("div"); z.className = "zoom"; z.innerHTML = `<img src="${esc(imgUrl(c, 400).replace(/_400w\./, "_1000w."))}" alt="${esc(c.n)}">`; z.onclick = () => z.remove(); document.body.appendChild(z); },
     wish: () => { haptic(); store.update((s) => toggleWish(s, c.i), "wishlist", "wishFolders"); ctx.toast(isWished(state, c.i) ? "Added to wishlist" : "Removed from wishlist"); },
     folders: () => ctx.router.setQuery({ sheet: "folders" }, { replace: false }),
-    tog: (el) => { const q = getQty(state.owned, c.i, el.dataset.v); if (q > 1) { ctx.toast(`You own ${q} — counts are edited from Collection or Search`); return; } setq(el.dataset.v, q > 0 ? 0 : 1); },
+    tog: (el) => { const q = getQty(state.owned, c.i, el.dataset.v); setq(el.dataset.v, q > 0 ? 0 : 1); },
     inc: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) + 1),
     dec: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) - 1),
     openset: () => { ctx.go("/sets/" + c.sid); },
