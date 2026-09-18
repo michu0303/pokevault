@@ -8,6 +8,10 @@ export const CATS = [CAT, CAT_JP];
 // Pre-built catalog published daily by .github/workflows/catalog.yml to the
 // orphan branch `catalog-data`. Set to "" to always crawl the API instead.
 export const CATALOG_URL = "https://raw.githubusercontent.com/michu0303/pokevault/catalog-data/catalog.json.gz";
+/** the small metadata file published next to the catalog */
+export const metaUrlFor = (catalogUrl) => catalogUrl ? catalogUrl.replace(/[^/]+$/, "catalog-meta.json") : "";
+/** how often the app asks whether a newer catalog has been published */
+export const CATALOG_CHECK_MS = 12 * 60 * 60 * 1000;
 /** per-set price history lives next to the catalog: <base>/hist/<setId>.json.gz */
 export const histUrlFor = (catalogUrl, sid) => catalogUrl ? catalogUrl.replace(/[^/]+$/, "hist/" + sid + ".json.gz") : "";
 export const CATALOG_META_URL = "https://raw.githubusercontent.com/michu0303/pokevault/catalog-data/catalog-meta.json";
@@ -16,7 +20,7 @@ export const LS = {
   OWNED: "pv3_owned", WISH: "pv3_wishlist", PRICES: "pv3_prices", TRACKED: "pv3_tracked",
   FAV: "pv4_favorites", META: "pv2_catalog_meta", HISTORY: "pv4_history", PREFS: "pv4_prefs",
   SYNC: "pv4_sync", DIRTY: "pv4_dirty", WFOLDERS: "pv4_wishfolders", SETDATES: "pv4_setdates",
-  LEGACY_COLLECTION: "pv2_collection", PRICES_AT: "pv5_pricesat",
+  LEGACY_COLLECTION: "pv2_collection", PRICES_AT: "pv5_pricesat", CAT_CHECK: "pv5_catcheck",
 };
 export const IDB_NAME = "pokevault";
 export const IDB_STORE = "catalog";
@@ -38,7 +42,7 @@ export const CHASE_RE = /double rare|ultra|illustration|hyper|secret|rainbow|ama
 export const HIVALUE_RE = /ultra|illustration|hyper|secret|rainbow|gold|crown|shiny|amazing|radiant|prism|vmax|vstar|legend|lv\.?\s?x|\bstar\b/i;
 
 /** shown in Settings; tests/sw.test.js checks it matches sw.js VERSION */
-export const APP_VERSION = "2026-09-17.4";
+export const APP_VERSION = "2026-09-17.5";
 export const HISTORY_MAX = 365;        // daily totals kept for a year
 export const HISTORY_DETAIL_DAYS = 60;  // per-card prices kept for two months
 export const SEARCH_LIMIT = 240;

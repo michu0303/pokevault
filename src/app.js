@@ -1,10 +1,10 @@
 // Application bootstrap: load persisted state, open the catalog, wire sync.
 // UI code subscribes to the store; this module owns the lifecycle only.
-import { CATALOG_URL, CAT, histUrlFor } from "./constants.js";
+import { CATALOG_URL, CAT, histUrlFor, metaUrlFor, CATALOG_CHECK_MS, LS } from "./constants.js";
 import { loadAll, idbGetAll, idbReplaceCatalog } from "./storage.js";
 import { createStore } from "./store.js";
 import { indexCatalog } from "./catalog.js";
-import { crawlCatalog, loadStaticCatalog, fetchSetDates, fetchSetPricing, loadPriceHistory } from "./api.js";
+import { crawlCatalog, loadStaticCatalog, fetchSetDates, fetchSetPricing, loadPriceHistory, fetchCatalogMeta, catalogIsStale } from "./api.js";
 import { applySetPricing } from "./pricing.js";
 import { snapshot } from "./history.js";
 import { createSyncClient, syncConfigured, pickVault, applyVault } from "./sync.js";
@@ -58,6 +58,30 @@ export function createApp({ ls = globalThis.localStorage, idb = globalThis.index
     adoptCatalog(products, setDates, { count: products.length, builtAt, source });
     state.building = false; store.touch("build");
     return products.length;
+  }
+
+  /**
+   * The catalog used to be downloaded once and never again, so cards added
+   * upstream later never reached the device. At most every CATALOG_CHECK_MS,
+   * read the published metadata (a few hundred bytes) and, when it is newer,
+   * download and swap the catalog in the background. Never throws.
+   * Resolves { updated, added } (added may be negative).
+   */
+  async function refreshCatalogIfStale({ force = false, now = Date.now() } = {}) {
+    try {
+      if (state.building || !state.catalog.length) return { updated: false };
+      const last = +(ls.getItem(LS.CAT_CHECK) || 0) || 0;
+      if (!force && now - last < CATALOG_CHECK_MS) return { updated: false, skipped: "checked recently" };
+      const remote = await fetchCatalogMeta(metaUrlFor(catalogUrl), fetchImpl);
+      if (!remote) return { updated: false, skipped: "no published metadata" };   // don't stamp: try again next launch
+      try { ls.setItem(LS.CAT_CHECK, String(now)); } catch (e) {}
+      if (!catalogIsStale(state.catalogMeta, remote)) return { updated: false };
+      const before = state.catalog.length;
+      const doc = await loadStaticCatalog(catalogUrl, fetchImpl);
+      await idbReplaceCatalog(doc.products, idb);
+      adoptCatalog(doc.products, doc.setDates, { count: doc.products.length, builtAt: doc.builtAt, source: "static" });
+      return { updated: true, added: doc.products.length - before, count: doc.products.length };
+    } catch (e) { return { updated: false, error: e.message }; }
   }
 
   /** ensure prices for one set are loaded (cached per session) */
@@ -157,8 +181,9 @@ export function createApp({ ls = globalThis.localStorage, idb = globalThis.index
     if (had && !Object.keys(state.setDates).length) fetchSetDates(fetchImpl).then((m) => { if (Object.keys(m).length) store.update((s) => { s.setDates = { ...s.setDates, ...m }; }, "setDates"); }).catch(() => {});
     logSnapshot();
     initSync();
+    if (had) refreshCatalogIfStale().then((r) => { if (r.updated) store.touch("catalogUpdated:" + r.added); });
     return had;
   }
 
-  return { store, state, boot, openCatalog, buildCatalog, loadSetPricing, getPriceHistory, refreshValues, logSnapshot, initSync, pushNow, connectSync, finishConnect, disconnectSync, offlineImageUrls, warmImages };
+  return { store, state, boot, openCatalog, buildCatalog, loadSetPricing, getPriceHistory, refreshCatalogIfStale, refreshValues, logSnapshot, initSync, pushNow, connectSync, finishConnect, disconnectSync, offlineImageUrls, warmImages };
 }

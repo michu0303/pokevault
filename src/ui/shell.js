@@ -57,6 +57,7 @@ export function mountShell(app, screens) {
   }
   store.subscribe((s, changed) => {
     if (changed.has("prefs")) applyTheme(s.prefs.theme);
+    for (const k of changed) if (typeof k === "string" && k.startsWith("catalogUpdated:")) { const n = +k.split(":")[1] || 0; toast(n > 0 ? `Card database updated — ${n.toLocaleString()} new products` : "Card database updated"); }
     // the catalog arrives asynchronously after boot — remount whatever is on screen
     if (changed.has("catalog")) { activeKey = ""; sheetKey = ""; onRoute(router.route); return; }
     if (active && active.update) active.update(changed);

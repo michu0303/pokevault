@@ -91,6 +91,23 @@ async function gunzipResponse(res) {
   const stream = new Blob([bytes]).stream().pipeThrough(ds);
   return await new Response(stream).text();
 }
+/** The published catalog's metadata ({ builtAt, count, … }); null on any failure. */
+export async function fetchCatalogMeta(url, fetchImpl = globalThis.fetch) {
+  if (!url) return null;
+  try {
+    const res = await fetchImpl(url, { cache: "no-store" });
+    if (!res.ok) return null;
+    const m = await res.json();
+    return m && m.format === 1 && typeof m.builtAt === "string" && m.count > 0 ? m : null;
+  } catch (e) { return null; }
+}
+/** Is the published catalog newer than the one on this device? Conservative:
+ *  anything unreadable or not strictly newer means "no". */
+export function catalogIsStale(local, remote) {
+  if (!remote || typeof remote.builtAt !== "string" || !(remote.count > 0)) return false;
+  if (!local || !local.builtAt) return true;
+  return remote.builtAt > local.builtAt;
+}
 /** Download one set's price history; null when the server has none yet. */
 export async function loadPriceHistory(url, fetchImpl = globalThis.fetch) {
   if (!url) return null;
