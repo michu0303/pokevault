@@ -406,3 +406,16 @@ html.kb #toast{bottom:auto;top:calc(var(--vvt,0px) + 12px)}
 .nav{height:calc(var(--nav-h) + var(--nav-pad));padding:2px 4px var(--nav-pad)}
 #screen{padding-bottom:calc(var(--nav-h) + var(--nav-pad) + 16px)}
 #toast{bottom:calc(var(--nav-h) + var(--nav-pad) + 12px)}
+
+/* ---- quantities: search tiles + collection rows ---- */
+.tile .qc{position:absolute;top:6px;right:6px;display:flex;align-items:center;gap:2px;background:var(--quick-bg);border-radius:16px;padding:2px;box-shadow:0 1px 3px rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.6)}
+.tile .qc button{width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--strong);font-size:18px;font-weight:800;line-height:0;display:flex;align-items:center;justify-content:center;padding:0}
+.tile .qc button svg{width:16px;height:16px}
+.tile .qc.on{background:var(--check);border-color:#fff}
+.tile .qc.on button{color:#fff}
+.tile .qc b{color:#fff;font-size:12px;min-width:12px;text-align:center}
+.vtog .c b{font-size:9.5px;font-weight:900;color:#fff}
+.vcheck i b{font-size:10px;font-weight:900}
+.stepper.sm button{width:36px;height:36px;font-size:18px}
+.stepper.sm .q{min-width:20px;font-size:15px}
+.crow .stepper{margin-right:-4px}

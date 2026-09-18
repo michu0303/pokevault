@@ -2,7 +2,7 @@
 import { I } from "../icons.js";
 import { esc, money, delegate, haptic, imgUrl, displayName, $ } from "../dom.js";
 import { getQty, setQty, ownedTotal, isWished, toggleWish, cardFolders } from "../../collection.js";
-import { isChaseRarity, patternOf, shortVariant } from "../../catalog.js";
+import { patternOf, shortVariant } from "../../catalog.js";
 import { variantsFor, priceOf, primaryVariant, priceDetail } from "../../pricing.js";
 import { productSeries, rangeSeries } from "../../history.js";
 import { seriesOf, mergeSeries } from "../../pricehist.js";
@@ -26,7 +26,9 @@ export function mountCardSheet(host, ctx, pid) {
     if (!c) { body.innerHTML = `<div class="empty">Card not found in the local catalog.</div>`; return; }
     const g = state.bySet.get(String(c.sid));
     const vs = variantsFor(state.flatPrices, c.i, state.owned), pv = primaryVariant(state.flatPrices, c.i, state.owned), px = priceOf(state.flatPrices, c.i, pv);
-    const owned = ownedTotal(state.owned, c.i), chase = c.sealed || isChaseRarity(c.r);
+    const owned = ownedTotal(state.owned, c.i);
+    // opened from a set page → master-set checks; from Search / Collection / Wishlist / Home → quantities
+    const chase = c.sealed || ctx.route.tab !== "sets";
     const raw = state.priceCache[String(c.sid)];
     const det = priceDetail(raw, c.i, pv);
     const range = state.ui.cardRange || "30";
@@ -47,7 +49,7 @@ export function mountCardSheet(host, ctx, pid) {
         const sub = p != null ? money(p) + (d && d.low != null && d.low !== p ? " · low " + money(d.low) : "") : "price unavailable";
         return chase
           ? `<div class="card vrow ${q ? "has" : ""}"><div class="vi"><div class="vn">${esc(shortVariant(v) === "Normal" && vs.length === 1 ? (c.sealed ? "Sealed" : v) : v)}</div><div class="vp num">${sub}${q > 1 ? ` · ${money(p * q)} for ${q}` : ""}</div></div><div class="stepper"><button data-action="dec" data-v="${esc(v)}" aria-label="Remove one">−</button><span class="q num">${q}</span><button data-action="inc" data-v="${esc(v)}" aria-label="Add one">+</button></div></div>`
-          : `<div class="card vrow toggle ${q ? "has" : ""}" data-action="tog" data-v="${esc(v)}"><div class="vi"><div class="vn">${esc(v)}</div><div class="vp num">${sub}</div></div><span class="vcheck"><i>${q ? I.check : ""}</i></span></div>`; }).join("")}</div>
+          : `<div class="card vrow toggle ${q ? "has" : ""}" data-action="tog" data-v="${esc(v)}"><div class="vi"><div class="vn">${esc(v)}</div><div class="vp num">${sub}${q > 1 ? ` · you own ${q}` : ""}</div></div><span class="vcheck"><i>${q ? (q > 1 ? `<b>×${q}</b>` : I.check) : ""}</i></span></div>`; }).join("")}</div>
       ${g ? (ctx.route.tab === "sets" && ctx.route.parts[1] === String(c.sid) ? (c.sealed ? "" : `<button class="btn ghost linkrow" data-action="binder">Show in binder ${I.chevR}</button>`) : `<button class="btn ghost linkrow" data-action="openset">Open ${esc(g.name)} ${I.chevR}</button>`) : ""}`;
   }
   const setq = (v, n) => {
@@ -60,7 +62,7 @@ export function mountCardSheet(host, ctx, pid) {
     zoom: () => { const z = document.createElement("div"); z.className = "zoom"; z.innerHTML = `<img src="${esc(imgUrl(c, 400).replace(/_400w\./, "_1000w."))}" alt="${esc(c.n)}">`; z.onclick = () => z.remove(); document.body.appendChild(z); },
     wish: () => { haptic(); store.update((s) => toggleWish(s, c.i), "wishlist", "wishFolders"); ctx.toast(isWished(state, c.i) ? "Added to wishlist" : "Removed from wishlist"); },
     folders: () => ctx.router.setQuery({ sheet: "folders" }, { replace: false }),
-    tog: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) > 0 ? 0 : 1),
+    tog: (el) => { const q = getQty(state.owned, c.i, el.dataset.v); if (q > 1) { ctx.toast(`You own ${q} — counts are edited from Collection or Search`); return; } setq(el.dataset.v, q > 0 ? 0 : 1); },
     inc: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) + 1),
     dec: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) - 1),
     openset: () => { ctx.go("/sets/" + c.sid); },

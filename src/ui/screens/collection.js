@@ -1,7 +1,9 @@
 // Collection: owned products by value, Cards / Sealed, sort + filters, "show more".
 import { I } from "../icons.js";
 import { esc, money, delegate, imgTag, imgUrl, relTime, displayName, $ } from "../dom.js";
-import { ownedTotal, productValue, totalWorth } from "../../collection.js";
+import { ownedTotal, productValue, totalWorth, getQty, setQty } from "../../collection.js";
+import { variantRank } from "../../catalog.js";
+import { haptic } from "../dom.js";
 import { applyFilters, applySort, activeCount, sortHtml, filtersHtml, filterActions, raritiesOf, setsOf, SORTS } from "../filters.js";
 import { mountSheet } from "../sheet.js";
 import { CAT_JP } from "../../constants.js";
@@ -26,9 +28,10 @@ export function mount(root, ctx) {
     if (!all.length) { el.innerHTML = `<div class="card empty"><b>Nothing owned yet.</b><br>Open a set and tap the checks, or use the + on search results.</div>`; return; }
     if (!list.length) { el.innerHTML = `<div class="empty">Nothing matches these filters.</div>`; return; }
     el.innerHTML = list.slice(0, f.shown).map((c) => {
-      const o = state.owned[String(c.i)] || {}, qty = ownedTotal(state.owned, c.i);
-      const printings = Object.keys(o).map((v) => v + (o[v] > 1 ? " ×" + o[v] : "")).join(", ");
-      return `<div class="card crow"><div class="tap" data-action="card" data-pid="${c.i}"><div class="thumb">${imgTag(imgUrl(c), c.n)}</div><div class="info"><div class="nm">${esc(displayName(c))}</div><div class="meta">${esc(c.s)}${c.nu ? " · " + esc(c.nu) : ""}${c.cat === CAT_JP ? " · JP" : ""} · ${esc(printings)}</div></div></div><div class="val"><b class="num">${money(productValue(state.owned, state.flatPrices, c.i))}</b><span class="num">${qty} owned</span></div></div>`;
+      const o = state.owned[String(c.i)] || {}, vs = Object.keys(o).sort((a, b) => variantRank(a) - variantRank(b)), v = vs[0], q = o[v] || 0;
+      const printings = vs.map((x) => x + (o[x] > 1 ? " ×" + o[x] : "")).join(", ");
+      return `<div class="card crow"><div class="tap" data-action="card" data-pid="${c.i}"><div class="thumb">${imgTag(imgUrl(c), c.n)}</div><div class="info"><div class="nm">${esc(displayName(c))}</div><div class="meta">${esc(c.s)}${c.nu ? " · " + esc(c.nu) : ""}${c.cat === CAT_JP ? " · JP" : ""} · ${esc(printings)}</div><div class="meta num" style="color:var(--ink);font-weight:800">${money(productValue(state.owned, state.flatPrices, c.i))}</div></div></div>
+        <div class="stepper sm"><button data-action="dec" data-pid="${c.i}" data-v="${esc(v)}" aria-label="Remove one">−</button><span class="q num">${q}</span><button data-action="inc" data-pid="${c.i}" data-v="${esc(v)}" aria-label="Add one">+</button></div></div>`;
     }).join("") + (list.length > f.shown ? `<button class="btn ghost" data-action="more">Show more · ${list.length - f.shown} left</button>` : "");
   }
   function openSheet(name) {
@@ -42,9 +45,16 @@ export function mount(root, ctx) {
     const wire = () => { const i = $("[data-region=setq]", sheet.host); if (!i) return; i.addEventListener("input", () => { setQ = i.value; sheet.repaint(html()); const ni = $("[data-region=setq]", sheet.host); ni.focus(); ni.setSelectionRange(setQ.length, setQ.length); wire(); }); };
     wire();
   }
+  function stepRow(el, d) {
+    const pid = el.dataset.pid, v = el.dataset.v, q = getQty(state.owned, pid, v), n = Math.max(0, q + d);
+    haptic(); store.update((s) => setQty(s.owned, pid, v, n), "owned");
+    if (q > 0 && n === 0) ctx.toast("Removed from your collection", { action: "Undo", onAction: () => store.update((s) => setQty(s.owned, pid, v, q), "owned") });
+  }
   const off = delegate(root, {
     seg: (el) => { seg = el.dataset.seg; f.shown = 30; paint(); },
     card: (el) => ctx.openCard(el.dataset.pid),
+    inc: (el) => stepRow(el, +1),
+    dec: (el) => stepRow(el, -1),
     more: () => { f.shown += 30; paint(); },
     sort: () => ctx.router.setQuery({ sheet: "sort" }, { replace: false }),
     filters: () => ctx.router.setQuery({ sheet: "filters" }, { replace: false }),

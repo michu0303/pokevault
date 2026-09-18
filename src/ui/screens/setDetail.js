@@ -5,7 +5,7 @@ import { esc, money, delegate, progressRing, haptic, imgTag, imgUrl, displayName
 import { askText } from "../dialog.js";
 import { quickToggleGroup } from "../../collection.js";
 import { setStats, groupState, ownState, getQty, setQty, ownedTotal, isTracked, toggleSetStar } from "../../collection.js";
-import { groupPrintings, isChaseRarity } from "../../catalog.js";
+import { groupPrintings } from "../../catalog.js";
 import { variantsFor, priceOf, primaryVariant } from "../../pricing.js";
 import { CAT_JP } from "../../constants.js";
 
@@ -84,11 +84,10 @@ export function mount(root, ctx) {
     if (!grs.length) { body.innerHTML = `<div class="empty">${q.trim() ? `Nothing in this set matches “${esc(q.trim())}”.` : qv().f === "owned" ? "Nothing complete here yet." : qv().f === "missing" ? "<b>Set complete!</b> Nothing missing." : "No cards match."}</div>`; return; }
     if (view === "list") {
       body.innerHTML = `<div class="stack group">${grs.map((grp) => {
-        const base = grp.products[0], chase = grp.products.some((p) => isChaseRarity(p.r));
+        const base = grp.products[0];
         const printings = groupPrintings(grp, vf);
-        const togs = chase
-          ? grp.products.map((p) => { const v = vf(p.i)[0], q = getQty(state.owned, p.i, v); return `<div class="stepper"><button data-action="dec" data-pid="${p.i}" data-v="${esc(v)}" aria-label="Remove one">−</button><span class="q num">${q}</span><button data-action="inc" data-pid="${p.i}" data-v="${esc(v)}" aria-label="Add one">+</button></div>`; }).join("")
-          : printings.map((pr) => { const on = getQty(state.owned, pr.pid, pr.variant) > 0; return `<button class="vtog ${on ? "on" : ""}" data-action="tog" data-pid="${pr.pid}" data-v="${esc(pr.variant)}" aria-label="${esc(pr.label)} ${on ? "owned" : "not owned"}"><span class="c">${on ? I.check : ""}</span><span class="l">${esc(pr.label.replace(/^Master Ball$/, "Master"))}</span></button>`; }).join("");
+        // master-set view: every printing is a check, chase cards included; counts live in Collection / Search
+        const togs = printings.map((pr) => { const q = getQty(state.owned, pr.pid, pr.variant), on = q > 0; return `<button class="vtog ${on ? "on" : ""}" data-action="tog" data-pid="${pr.pid}" data-v="${esc(pr.variant)}" aria-label="${esc(pr.label)} ${on ? "owned" : "not owned"}"><span class="c">${on ? (q > 1 ? `<b>×${q}</b>` : I.check) : ""}</span><span class="l">${esc(pr.label.replace(/^Master Ball$/, "Master"))}</span></button>`; }).join("");
         const bp = priceOf(state.flatPrices, base.i, primaryVariant(state.flatPrices, base.i, state.owned));
         return `<div class="card lrow"><div class="tap" data-action="card" data-pid="${base.i}"><div class="thumb">${imgTag(imgUrl(base), grp.name)}</div><div class="info"><div class="nm">${esc(grp.name)}</div><div class="meta">#${esc(grp.number || "—")}${base.r ? " · " + esc(base.r) : ""}${bp != null ? ` · <b class="num" data-price="${base.i}">${money(bp)}</b>` : `<b class="num" data-price="${base.i}"></b>`}</div></div></div><div class="togs">${togs}</div></div>`;
       }).join("")}</div>`;
@@ -118,7 +117,7 @@ export function mount(root, ctx) {
   function paint() { paintProg(); paintFilters(); paintBody(); }
   /** ownership changed: patch checks, steppers and badges in place (no image reloads, no lost scroll) */
   function patchOwned() {
-    for (const b of root.querySelectorAll(".vtog")) { const on = getQty(state.owned, b.dataset.pid, b.dataset.v) > 0; b.classList.toggle("on", on); $(".c", b).innerHTML = on ? I.check : ""; }
+    for (const b of root.querySelectorAll(".vtog")) { const q = getQty(state.owned, b.dataset.pid, b.dataset.v), on = q > 0; b.classList.toggle("on", on); $(".c", b).innerHTML = on ? (q > 1 ? `<b>×${q}</b>` : I.check) : ""; }
     for (const st of root.querySelectorAll(".stepper")) { const btn = $("[data-action=inc]", st); if (btn) $(".q", st).textContent = getQty(state.owned, btn.dataset.pid, btn.dataset.v); }
     const { f, view } = qv();
     if (view === "binder" || f !== "all") { paintBody(); return; }
@@ -164,7 +163,7 @@ export function mount(root, ctx) {
       if (isNaN(pg)) { ctx.toast("Type a page or a card number"); return; }
       pg = Math.max(0, Math.min(pages - 1, pg)); ctx.router.setQuery({ page: pg ? String(pg) : "" });
     },
-    tog: (el) => setq(el.dataset.pid, el.dataset.v, getQty(state.owned, el.dataset.pid, el.dataset.v) > 0 ? 0 : 1),
+    tog: (el) => { const q = getQty(state.owned, el.dataset.pid, el.dataset.v); if (q > 1) { ctx.toast(`You own ${q} — change the count from Collection`, { action: "Open", onAction: () => ctx.openCard(el.dataset.pid) }); return; } setq(el.dataset.pid, el.dataset.v, q > 0 ? 0 : 1); },
     inc: (el) => setq(el.dataset.pid, el.dataset.v, getQty(state.owned, el.dataset.pid, el.dataset.v) + 1),
     dec: (el) => setq(el.dataset.pid, el.dataset.v, getQty(state.owned, el.dataset.pid, el.dataset.v) - 1),
   });
