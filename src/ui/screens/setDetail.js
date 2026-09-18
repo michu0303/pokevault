@@ -87,7 +87,7 @@ export function mount(root, ctx) {
         const base = grp.products[0];
         const printings = groupPrintings(grp, vf);
         // master-set view: every printing is a check, chase cards included; counts live in Collection / Search
-        const togs = printings.map((pr) => { const q = getQty(state.owned, pr.pid, pr.variant), on = q > 0; return `<button class="vtog ${on ? "on" : ""}" data-action="tog" data-pid="${pr.pid}" data-v="${esc(pr.variant)}" aria-label="${esc(pr.label)} ${on ? "owned" : "not owned"}"><span class="c">${on ? (q > 1 ? `<b>×${q}</b>` : I.check) : ""}</span><span class="l">${esc(pr.label.replace(/^Master Ball$/, "Master"))}</span></button>`; }).join("");
+        const togs = printings.map((pr) => { const q = getQty(state.owned, pr.pid, pr.variant), on = q > 0; return `<button class="vtog ${on ? "on" : ""}" data-action="tog" data-pid="${pr.pid}" data-v="${esc(pr.variant)}" aria-label="${esc(pr.label)} ${on ? "owned" : "not owned"}"><span class="c">${on ? I.check : ""}</span><span class="l">${esc(pr.label.replace(/^Master Ball$/, "Master"))}</span></button>`; }).join("");
         const bp = priceOf(state.flatPrices, base.i, primaryVariant(state.flatPrices, base.i, state.owned));
         return `<div class="card lrow"><div class="tap" data-action="card" data-pid="${base.i}"><div class="thumb">${imgTag(imgUrl(base), grp.name)}</div><div class="info"><div class="nm">${esc(grp.name)}</div><div class="meta">#${esc(grp.number || "—")}${base.r ? " · " + esc(base.r) : ""}${bp != null ? ` · <b class="num" data-price="${base.i}">${money(bp)}</b>` : `<b class="num" data-price="${base.i}"></b>`}</div></div></div><div class="togs">${togs}</div></div>`;
       }).join("")}</div>`;
@@ -117,7 +117,7 @@ export function mount(root, ctx) {
   function paint() { paintProg(); paintFilters(); paintBody(); }
   /** ownership changed: patch checks, steppers and badges in place (no image reloads, no lost scroll) */
   function patchOwned() {
-    for (const b of root.querySelectorAll(".vtog")) { const q = getQty(state.owned, b.dataset.pid, b.dataset.v), on = q > 0; b.classList.toggle("on", on); $(".c", b).innerHTML = on ? (q > 1 ? `<b>×${q}</b>` : I.check) : ""; }
+    for (const b of root.querySelectorAll(".vtog")) { const q = getQty(state.owned, b.dataset.pid, b.dataset.v), on = q > 0; b.classList.toggle("on", on); $(".c", b).innerHTML = on ? I.check : ""; }
     for (const st of root.querySelectorAll(".stepper")) { const btn = $("[data-action=inc]", st); if (btn) $(".q", st).textContent = getQty(state.owned, btn.dataset.pid, btn.dataset.v); }
     const { f, view } = qv();
     if (view === "binder" || f !== "all") { paintBody(); return; }

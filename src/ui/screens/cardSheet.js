@@ -49,7 +49,7 @@ export function mountCardSheet(host, ctx, pid) {
         const sub = p != null ? money(p) + (d && d.low != null && d.low !== p ? " · low " + money(d.low) : "") : "price unavailable";
         return chase
           ? `<div class="card vrow ${q ? "has" : ""}"><div class="vi"><div class="vn">${esc(shortVariant(v) === "Normal" && vs.length === 1 ? (c.sealed ? "Sealed" : v) : v)}</div><div class="vp num">${sub}${q > 1 ? ` · ${money(p * q)} for ${q}` : ""}</div></div><div class="stepper"><button data-action="dec" data-v="${esc(v)}" aria-label="Remove one">−</button><span class="q num">${q}</span><button data-action="inc" data-v="${esc(v)}" aria-label="Add one">+</button></div></div>`
-          : `<div class="card vrow toggle ${q ? "has" : ""}" data-action="tog" data-v="${esc(v)}"><div class="vi"><div class="vn">${esc(v)}</div><div class="vp num">${sub}${q > 1 ? ` · you own ${q}` : ""}</div></div><span class="vcheck"><i>${q ? (q > 1 ? `<b>×${q}</b>` : I.check) : ""}</i></span></div>`; }).join("")}</div>
+          : `<div class="card vrow toggle ${q ? "has" : ""}" data-action="tog" data-v="${esc(v)}"><div class="vi"><div class="vn">${esc(v)}</div><div class="vp num">${sub}</div></div><span class="vcheck"><i>${q ? I.check : ""}</i></span></div>`; }).join("")}</div>
       ${g ? (ctx.route.tab === "sets" && ctx.route.parts[1] === String(c.sid) ? (c.sealed ? "" : `<button class="btn ghost linkrow" data-action="binder">Show in binder ${I.chevR}</button>`) : `<button class="btn ghost linkrow" data-action="openset">Open ${esc(g.name)} ${I.chevR}</button>`) : ""}`;
   }
   const setq = (v, n) => {
