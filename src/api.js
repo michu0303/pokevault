@@ -39,8 +39,8 @@ export async function fetchSetProducts(set, fetchImpl, opts) {
   const r = await apiGet(`/${set.cat}/sets/${set.id}`, fetchImpl, opts);
   return (r.products || r.data || []).filter((p) => p && p.id != null).map((p) => normalizeProduct(p, set));
 }
-export async function fetchSetPricing(cat, setId, fetchImpl) {
-  const r = await apiGet(`/${cat}/sets/${setId}/pricing`, fetchImpl);
+export async function fetchSetPricing(cat, setId, fetchImpl, opts) {
+  const r = await apiGet(`/${cat}/sets/${setId}/pricing`, fetchImpl, opts);
   return r.prices || r.data || {};
 }
 /** set release dates for every category — small, separate from the catalog */

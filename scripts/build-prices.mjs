@@ -2,7 +2,7 @@
 //   node scripts/build-prices.mjs <outDir> [prevDir] [--sets 24541,23821]
 // prevDir holds yesterday's files (the checked-out catalog-data branch);
 // outDir receives the updated ones. Run daily by the catalog workflow.
-import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
+import { mkdirSync, writeFileSync, readFileSync, existsSync, copyFileSync, readdirSync } from "node:fs";
 import { gzipSync, gunzipSync } from "node:zlib";
 import { join } from "node:path";
 import { fetchSets, fetchSetPricing } from "../src/api.js";
@@ -30,7 +30,7 @@ async function worker() {
   while (i < sets.length) {
     const s = sets[i++];
     try {
-      const prices = withFillPrices(await fetchSetPricing(s.cat, s.id), fillBySet[String(s.id)]);
+      const prices = withFillPrices(await fetchSetPricing(s.cat, s.id, undefined, { retries: 3 }), fillBySet[String(s.id)]);
       const flat = flattenPricing(prices);
       const file = join(prev, s.id + ".json.gz");
       const old = existsSync(file) ? JSON.parse(gunzipSync(readFileSync(file)).toString()) : null;
@@ -41,5 +41,12 @@ async function worker() {
   }
 }
 await Promise.all(Array.from({ length: 6 }, worker));
+// A set whose prices could not be fetched today keeps the history it already
+// has: every file of the previous run that was not rewritten is carried over.
+let carried = 0;
+if (prev !== out && existsSync(prev)) for (const f of readdirSync(prev)) {
+  if (/^\d+\.json\.gz$/.test(f) && !existsSync(join(out, f))) { copyFileSync(join(prev, f), join(out, f)); carried++; }
+}
+if (carried) console.log(`carried over ${carried} history files unchanged`);
 writeFileSync(join(out, "index.json"), JSON.stringify({ format: 1, day, sets: sets.length, failed }));
 console.log(`price history for ${day}: ${done - failed} sets written to ${out}`);
