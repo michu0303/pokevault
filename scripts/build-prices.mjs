@@ -9,6 +9,7 @@ import { fetchSets, fetchSetPricing } from "../src/api.js";
 import { flattenPricing } from "../src/pricing.js";
 import { appendDay } from "../src/pricehist.js";
 import { CATS } from "../src/constants.js";
+import { withFillPrices } from "../src/gapfill.js";
 
 const args = process.argv.slice(2);
 const out = args[0] || "dist/hist", prev = args[1] && !args[1].startsWith("--") ? args[1] : out;
@@ -18,12 +19,18 @@ mkdirSync(out, { recursive: true });
 let sets = [];
 for (const cat of CATS) { try { sets = sets.concat(await fetchSets(cat)); } catch (e) { if (cat === CATS[0]) throw e; } }
 if (only.length) sets = sets.filter((s) => only.includes(String(s.id)));
+// products the catalog build filled in from TCGplayer (they carry their own prices)
+const fillBySet = {};
+try {
+  const cat = join(out, "..", "catalog.json.gz");
+  if (existsSync(cat)) for (const c of JSON.parse(gunzipSync(readFileSync(cat)).toString()).products) if (c.fp) (fillBySet[String(c.sid)] ||= []).push(c);
+} catch (e) {}
 let done = 0, failed = 0, i = 0;
 async function worker() {
   while (i < sets.length) {
     const s = sets[i++];
     try {
-      const prices = await fetchSetPricing(s.cat, s.id);
+      const prices = withFillPrices(await fetchSetPricing(s.cat, s.id), fillBySet[String(s.id)]);
       const flat = flattenPricing(prices);
       const file = join(prev, s.id + ".json.gz");
       const old = existsSync(file) ? JSON.parse(gunzipSync(readFileSync(file)).toString()) : null;

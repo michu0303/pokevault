@@ -1,7 +1,8 @@
 // TCGTracking Open TCG API + the pre-built static catalog. Environment-neutral:
 // runs in the browser and in Node (scripts/build-catalog.mjs). Parses
 // responses defensively — the live API cannot be reached from every sandbox.
-import { API, CATS, CATALOG_URL } from "./constants.js";
+import { API, CATS, CATALOG_URL, CSV_API, CSV_UA } from "./constants.js";
+import { findGaps, csvPrices } from "./gapfill.js";
 import { normalizeProduct } from "./catalog.js";
 
 export class ApiError extends Error { constructor(msg, status) { super(msg); this.status = status; } }
@@ -90,6 +91,41 @@ async function gunzipResponse(res) {
   const ds = new DecompressionStream("gzip");
   const stream = new Blob([bytes]).stream().pipeThrough(ds);
   return await new Response(stream).text();
+}
+/** One TCGCSV list ("products" | "prices") of a set; throws on failure. */
+export async function fetchCsv(cat, setId, kind, fetchImpl = globalThis.fetch) {
+  const res = await fetchImpl(`${CSV_API}/${cat}/${setId}/${kind}`, { headers: { "User-Agent": CSV_UA } });
+  if (!res.ok) throw new ApiError("TCGCSV error (" + res.status + ")", res.status);
+  const j = await res.json();
+  return (j && j.results) || [];
+}
+/**
+ * Fill the crawl's gaps from TCGCSV, set by set (prices are only fetched for
+ * sets that have a gap). Best-effort: a set that fails is skipped.
+ * → { filled: [product], checked, errors }
+ */
+export async function fillCatalogGaps({ products, sets }, { fetch: fetchImpl, concurrency = 6, onProgress } = {}) {
+  const have = new Map();
+  for (const p of products) { const k = String(p.sid); if (!have.has(k)) have.set(k, new Set()); have.get(k).add(String(p.i)); }
+  const todo = sets.filter((s) => have.has(String(s.id)));   // never invent whole sets
+  const filled = []; let cur = 0, checked = 0, errors = 0;
+  async function worker() {
+    while (cur < todo.length) {
+      const set = todo[cur++];
+      try {
+        const list = await fetchCsv(set.cat, set.id, "products", fetchImpl);
+        const mine = have.get(String(set.id));
+        if (list.some((p) => p && p.productId != null && !mine.has(String(p.productId)))) {
+          let prices = {}; try { prices = csvPrices(await fetchCsv(set.cat, set.id, "prices", fetchImpl)); } catch (e) {}
+          for (const c of findGaps(mine, list, set, prices)) filled.push(c);
+        }
+        checked++;
+      } catch (e) { errors++; }
+      if (onProgress) onProgress({ done: checked + errors, total: todo.length, filled: filled.length, errors });
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, todo.length) }, worker));
+  return { filled, checked, errors };
 }
 /** The published catalog's metadata ({ builtAt, count, … }); null on any failure. */
 export async function fetchCatalogMeta(url, fetchImpl = globalThis.fetch) {

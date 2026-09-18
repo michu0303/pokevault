@@ -8,6 +8,9 @@ export const CATS = [CAT, CAT_JP];
 // Pre-built catalog published daily by .github/workflows/catalog.yml to the
 // orphan branch `catalog-data`. Set to "" to always crawl the API instead.
 export const CATALOG_URL = "https://raw.githubusercontent.com/michu0303/pokevault/catalog-data/catalog.json.gz";
+/** TCGplayer mirror used by the catalog build to fill products TCGTracking has not synced yet (needs a User-Agent) */
+export const CSV_API = "https://tcgcsv.com/tcgplayer";
+export const CSV_UA = "PokeVault-catalog/1.0 (+https://github.com/michu0303/pokevault)";
 /** the small metadata file published next to the catalog */
 export const metaUrlFor = (catalogUrl) => catalogUrl ? catalogUrl.replace(/[^/]+$/, "catalog-meta.json") : "";
 /** how often the app asks whether a newer catalog has been published */
@@ -42,7 +45,7 @@ export const CHASE_RE = /double rare|ultra|illustration|hyper|secret|rainbow|ama
 export const HIVALUE_RE = /ultra|illustration|hyper|secret|rainbow|gold|crown|shiny|amazing|radiant|prism|vmax|vstar|legend|lv\.?\s?x|\bstar\b/i;
 
 /** shown in Settings; tests/sw.test.js checks it matches sw.js VERSION */
-export const APP_VERSION = "2026-09-17.5";
+export const APP_VERSION = "2026-09-17.6";
 export const HISTORY_MAX = 365;        // daily totals kept for a year
 export const HISTORY_DETAIL_DAYS = 60;  // per-card prices kept for two months
 export const SEARCH_LIMIT = 240;

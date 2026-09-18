@@ -1,5 +1,6 @@
 // Application bootstrap: load persisted state, open the catalog, wire sync.
 // UI code subscribes to the store; this module owns the lifecycle only.
+import { withFillPrices } from "./gapfill.js";
 import { CATALOG_URL, CAT, histUrlFor, metaUrlFor, CATALOG_CHECK_MS, LS } from "./constants.js";
 import { loadAll, idbGetAll, idbReplaceCatalog } from "./storage.js";
 import { createStore } from "./store.js";
@@ -89,7 +90,8 @@ export function createApp({ ls = globalThis.localStorage, idb = globalThis.index
     sid = String(sid);
     if (!force && state.priceCache[sid]) return state.priceCache[sid];
     const g = state.bySet.get(sid);
-    const prices = await fetchSetPricing((g && g.cat) || CAT, sid, fetchImpl);
+    // products the build filled in from TCGplayer bring their own prices until the API knows them
+    const prices = withFillPrices(await fetchSetPricing((g && g.cat) || CAT, sid, fetchImpl), state.catalog.filter((c) => c.fp && String(c.sid) === sid));
     state.priceCache[sid] = prices;
     store.update((s) => { applySetPricing(s.flatPrices, prices, g); s.pricesAt = Date.now(); }, "flatPrices");
     return prices;
