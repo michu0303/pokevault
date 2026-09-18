@@ -2,7 +2,7 @@
 // 3×3 binder. View state lives in the route query so back/forward work.
 import { I } from "../icons.js";
 import { esc, money, delegate, progressRing, haptic, imgTag, imgUrl, displayName, longPress, $ } from "../dom.js";
-import { askText } from "../dialog.js";
+import { askText, askConfirm } from "../dialog.js";
 import { quickToggleGroup } from "../../collection.js";
 import { setStats, groupState, ownState, getQty, setQty, ownedTotal, isTracked, toggleSetStar } from "../../collection.js";
 import { groupPrintings } from "../../catalog.js";
@@ -134,7 +134,7 @@ export function mount(root, ctx) {
     const wasComplete = groupState(state.owned, state.flatPrices, grp) === "complete";
     let ok = true; store.update((s) => { ok = quickToggleGroup(s.owned, s.flatPrices, grp); }, "owned");
     haptic(12);
-    if (!ok) { ctx.toast("This card has counts above one — open it to change them"); return; }
+    if (!ok) { ctx.toast("You own several copies of a printing — tap its check to remove one or all"); return; }
     if (wasComplete) ctx.toast(`${grp.name} cleared`, { action: "Undo", onAction: () => store.update((s) => { JSON.parse(before).forEach((o, i) => { const pid = String(grp.products[i].i); if (o) s.owned[pid] = o; else delete s.owned[pid]; }); }, "owned") });
     else ctx.toast(`${grp.name} — every printing owned`);
   }
@@ -163,7 +163,14 @@ export function mount(root, ctx) {
       if (isNaN(pg)) { ctx.toast("Type a page or a card number"); return; }
       pg = Math.max(0, Math.min(pages - 1, pg)); ctx.router.setQuery({ page: pg ? String(pg) : "" });
     },
-    tog: (el) => { const q = getQty(state.owned, el.dataset.pid, el.dataset.v); setq(el.dataset.pid, el.dataset.v, q > 0 ? 0 : 1); },
+    tog: async (el) => {
+      const pid = el.dataset.pid, v = el.dataset.v, q = getQty(state.owned, pid, v);
+      if (q <= 1) { setq(pid, v, q > 0 ? 0 : 1); return; }
+      // several copies: a set page only knows yes / no, so ask what un-checking should mean
+      const r = await askConfirm({ title: `You have ${q} copies`, message: "Set pages only track yes or no. Removing one keeps this card checked; the exact count lives in Collection.", ok: "Remove one", alt: "Remove all", cancel: "Cancel" });
+      if (r === true) { haptic(); store.update((s) => setQty(s.owned, pid, v, q - 1), "owned"); ctx.toast(`${q - 1} left — check the count in Collection`, { action: "Undo", onAction: () => store.update((s) => setQty(s.owned, pid, v, q), "owned") }); }
+      else if (r === "alt") setq(pid, v, 0);
+    },
     inc: (el) => setq(el.dataset.pid, el.dataset.v, getQty(state.owned, el.dataset.pid, el.dataset.v) + 1),
     dec: (el) => setq(el.dataset.pid, el.dataset.v, getQty(state.owned, el.dataset.pid, el.dataset.v) - 1),
   });

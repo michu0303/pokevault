@@ -9,6 +9,7 @@ import { seriesOf, mergeSeries } from "../../pricehist.js";
 import { lineChart, seriesDelta, rangeChips, deltaLine } from "../chart.js";
 import { CAT_JP } from "../../constants.js";
 import { mountSheet } from "../sheet.js";
+import { askConfirm } from "../dialog.js";
 import { askText } from "../dialog.js";
 import { toggleCardFolder, addFolder, folderCount } from "../../collection.js";
 
@@ -62,7 +63,13 @@ export function mountCardSheet(host, ctx, pid) {
     zoom: () => { const z = document.createElement("div"); z.className = "zoom"; z.innerHTML = `<img src="${esc(imgUrl(c, 400).replace(/_400w\./, "_1000w."))}" alt="${esc(c.n)}">`; z.onclick = () => z.remove(); document.body.appendChild(z); },
     wish: () => { haptic(); store.update((s) => toggleWish(s, c.i), "wishlist", "wishFolders"); ctx.toast(isWished(state, c.i) ? "Added to wishlist" : "Removed from wishlist"); },
     folders: () => ctx.router.setQuery({ sheet: "folders" }, { replace: false }),
-    tog: (el) => { const q = getQty(state.owned, c.i, el.dataset.v); setq(el.dataset.v, q > 0 ? 0 : 1); },
+    tog: async (el) => {
+      const v = el.dataset.v, q = getQty(state.owned, c.i, v);
+      if (q <= 1) { setq(v, q > 0 ? 0 : 1); return; }
+      const r = await askConfirm({ title: `You have ${q} copies`, message: "Set pages only track yes or no. Removing one keeps this card checked; the exact count lives in Collection.", ok: "Remove one", alt: "Remove all", cancel: "Cancel" });
+      if (r === true) { haptic(); store.update((s) => setQty(s.owned, c.i, v, q - 1), "owned"); ctx.toast(`${q - 1} left — check the count in Collection`, { action: "Undo", onAction: () => store.update((s) => setQty(s.owned, c.i, v, q), "owned") }); }
+      else if (r === "alt") setq(v, 0);
+    },
     inc: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) + 1),
     dec: (el) => setq(el.dataset.v, getQty(state.owned, c.i, el.dataset.v) - 1),
     openset: () => { ctx.go("/sets/" + c.sid); },
